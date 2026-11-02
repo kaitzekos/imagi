@@ -2,15 +2,16 @@
 <!--
   PROTOTYPE, shown on a public link (PLAN.md D12). Kai asked for this on 2026-10-26 as an exception to AGENTS.md.
   It is not the paid deliverable (reference/assignment.md: Lovable builds the games;
-  a custom platform or automated Gini is outside the job). No internet, no AI, no keys.
-  The guide is a set of written rules, not a live AI.
+  a custom platform or automated Gini is outside the job). No keys in this file.
+  The guide is a set of written rules, not a live AI. On the hosted page, pictures of things
+  are drawn by an image AI through api/draw.js (PLAN.md D13); opened locally, emoji are used.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<meta name="description" content="Concept prototype by Kai for Imaginable. Scripted guide, no AI. Not yet tested with children.">
+<meta name="description" content="Concept prototype by Kai for Imaginable. Scripted guide. Pictures drawn by AI. Not yet tested with children.">
 <title>Escape Builder</title>
 <style>
   /* Look matched to the product screens in Imaginable_Vision_.pptx (slides 22-26, 69, 71, 81, 99):
@@ -215,6 +216,8 @@
     border-radius: 50%; background: radial-gradient(closest-side, #120b2266, #120b2200);
   }
   .thing.onwall .emo { filter: drop-shadow(3px 5px 3px #1e143c33); }
+  /* A drawn picture takes the emoji's place at the same size (it scales with the emoji's font size). */
+  .thing .emo img.art { display: block; width: 1.3em; height: 1.3em; object-fit: contain; pointer-events: none; }
   .thing.onwall .emo::after { display: none; }
   .build .thing.inside .emo { opacity: .45; }
   .build .thing.inside .tag { background: #fff9; font-style: italic; }
@@ -502,7 +505,7 @@
       <div class="room build" id="room"></div>
       <div class="toolbar" id="toolbar"></div>
       <p class="stage-tip" id="stTip"></p>
-      <p class="stage-tip">Concept prototype by Kai for Imaginable. Scripted guide, no AI. Not yet tested with children.</p>
+      <p class="stage-tip">Concept prototype by Kai for Imaginable. Scripted guide. Pictures drawn by AI. Not yet tested with children.</p>
     </section>
   </div>
 </div>
@@ -581,7 +584,32 @@
     ]
   };
 
-  // ---------- words -> emoji (the real version would let AI draw it) ----------
+  // Picture prompts for the example's things (Zib and Blorp are aliens).
+  ["green alien", "purple space monster", "shop receipt", "round window with a planet outside", "donut", "snack fridge"]
+    .forEach(function (w, i) { EXAMPLE.things[i].art = artFor(w); });
+
+  // ---------- pictures: drawn by /api/draw on the hosted page (PLAN.md D13) ----------
+  // Opened as a local file, or if drawing fails, the emoji stays.
+  function artFor(name) {
+    var w = lower(name).replace(/[^a-z '-]/g, "").replace(/\s+/g, " ").trim().slice(0, 39);
+    if (location.protocol === "file:" || !/^[a-z]/.test(w) || /^thing$/.test(w)) return "";
+    return "/api/draw?thing=" + encodeURIComponent(w);
+  }
+  // One request per picture per page, however often the room re-renders.
+  var ART = {};
+  function whenArt(url, cb) {
+    var a = ART[url];
+    if (!a) {
+      a = ART[url] = { st: "loading", cbs: [] };
+      var im = new Image();
+      im.onload = function () { a.st = "ok"; a.cbs.forEach(function (f) { f(); }); a.cbs = []; };
+      im.onerror = function () { a.st = "fail"; a.cbs = []; };
+      im.src = url;
+    }
+    if (a.st === "ok") cb(); else if (a.st === "loading") a.cbs.push(cb);
+  }
+
+  // ---------- words -> emoji (shown while a picture loads, or instead of one) ----------
   var DICT = {
     "door": "🚪", "gate": "🚪", "box": "📦", "crate": "📦", "chest": "🧰", "toolbox": "🧰", "safe": "🔐", "lock": "🔒",
     "fridge": "🧊", "freezer": "🧊", "ice": "🧊", "window": "🪟", "clock": "🕰️", "bed": "🛏️", "chair": "🪑", "sofa": "🛋️",
@@ -618,7 +646,9 @@
     "queen": "👸", "princess": "👸", "knight": "🛡️", "chef": "🧑‍🍳", "baker": "🧑‍🍳", "teacher": "🧑‍🏫", "clown": "🤡",
     "sign": "🪧", "cash register": "🧾", "register": "🧾", "ticket": "🎟️", "dice": "🎲", "puzzle": "🧩", "cards": "🃏",
     "game": "🎮", "headphones": "🎧", "microphone": "🎤", "trumpet": "🎺", "violin": "🎻", "jelly": "🍮", "rug": "🧶",
-    "carpet": "🧶", "yarn": "🧶", "cushion": "🛋️", "pillow": "🛏️", "blanket": "🛏️", "cage": "🪤", "trap": "🪤"
+    "carpet": "🧶", "yarn": "🧶", "cushion": "🛋️", "pillow": "🛏️", "blanket": "🛏️", "cage": "🪤", "trap": "🪤",
+    "blackboard": "📋", "chalkboard": "📋", "whiteboard": "📋", "board": "📋",
+    "postit": "🗒️", "post-it": "🗒️", "sticky note": "🗒️", "notes": "🗒️"
   };
   var DICT_KEYS = Object.keys(DICT).sort(function (a, b) { return b.length - a.length; });
   var CREATURE = /alien|robot|ghost|dragon|owl|wizard|witch|dino|frog|monster|octopus|fish|shark|turtle|crab|parrot|monkey|snake|spider|bat|cat|dog/i;
@@ -661,7 +691,7 @@
   // Things and badges that should animate in on the next render.
   var FRESH = {}, FRESH_BADGE = {};
   function newThing(name) {
-    var t = { id: uid(), emoji: emojiFor(name), name: name, x: 50, y: 60, size: CREATURE.test(name) ? 86 : 68,
+    var t = { id: uid(), emoji: emojiFor(name), art: artFor(name), name: name, x: 50, y: 60, size: CREATURE.test(name) ? 86 : 68,
               say: "", clue: false, clueText: "", exit: false, inside: "" };
     FRESH[t.id] = true;
     return t;
@@ -793,7 +823,12 @@
       var raw = localStorage.getItem(KEY);
       if (raw) {
         var s = JSON.parse(raw);
-        if (s && s.game) { if (s.step === "idea") s.step = "ask"; return Object.assign(blankState(), s); }
+        if (s && s.game) {
+          if (s.step === "idea") s.step = "ask";
+          // Games saved before pictures existed get them from their names.
+          (s.game.things || []).forEach(function (t) { if (!("art" in t)) t.art = artFor(t.name); });
+          return Object.assign(blankState(), s);
+        }
       }
     } catch (e) { /* storage blocked: start fresh */ }
     return blankState();
@@ -914,7 +949,7 @@
     }
     if (s === "share") {
       if (!filled(state.invite)) return "Who do you want to try it? Write your invitation in your own words, like \"Can you escape my ___?\"";
-      return "Show your adult, so they can send it. Then watch your player. Afterwards, ask: \"What would you make differently?\"";
+      return "Show your teacher, so they can send it. Then watch your player. Afterwards, ask: \"What would you make differently?\"";
     }
     return "";
   }
@@ -1036,6 +1071,11 @@
     emo.className = "emo";
     emo.style.fontSize = t.size + "px";
     emo.textContent = t.emoji;
+    if (t.art) whenArt(t.art, function () {
+      var img = document.createElement("img");
+      img.className = "art"; img.alt = ""; img.src = t.art;
+      emo.textContent = ""; emo.appendChild(img);
+    });
     b.appendChild(emo);
     applyDepth(b, t);
     if (mode === "build") {
@@ -1438,9 +1478,9 @@
     if (s === "share") {
       h += "<h2>5. Share it</h2><p class=\"lead\">A game is better with a player.</p>";
       h += "<label for=\"inv\">Your invitation</label><input type=\"text\" id=\"inv\" data-inv=\"1\" placeholder=\"Can you escape my ___?\" value=\"" + esc(state.invite) + "\">";
-      h += "<div class=\"row\" style=\"margin-top:12px\"><button class=\"btn\" type=\"button\" data-act=\"adult\">🙋 Show my adult</button>" +
+      h += "<div class=\"row\" style=\"margin-top:12px\"><button class=\"btn\" type=\"button\" data-act=\"adult\">🙋 Show my teacher</button>" +
         "<button class=\"btn soft\" type=\"button\" data-act=\"play\" data-who=\"player\">👀 Play here with a friend</button></div>";
-      h += "<p class=\"muted\">An adult sends the link. You choose who to invite.</p>";
+      h += "<p class=\"muted\">Your teacher sends the link. You choose who to invite.</p>";
       h += "<h3>Build it for real in Lovable</h3>";
       h += "<p class=\"muted\">Your room becomes the starting prompt. Check it, then paste it into Lovable.</p>";
       h += "<button class=\"btn ghost small\" type=\"button\" data-act=\"copyprompt\">Copy my Lovable prompt</button>";
@@ -1555,6 +1595,11 @@
 
   $("panel").addEventListener("change", function (e) {
     var el = e.target, g = G(), act = el.dataset.act;
+    // A picture is drawn when the name is finished, not on every key.
+    if (el.dataset.tk === "name") {
+      var nt = thingById(el.dataset.id); if (!nt) return;
+      nt.art = artFor(nt.name); save(); renderRoom(); return;
+    }
     if (act === "clue") {
       var t = thingById(el.dataset.id); if (!t) return;
       t.clue = el.checked; if (t.clue) { t.exit = false; FRESH_BADGE[t.id] = true; }
@@ -1637,7 +1682,7 @@
       }
     }
     else if (act === "adult") {
-      popup({ emoji: "🙋", title: "For the adult",
+      popup({ emoji: "🙋", title: "For the teacher",
         body: "<p>This link holds the whole game. Anyone who has it can play. There is no sign-in.</p>" +
           "<p>Read the game's text first. Then you decide where to send it.</p>",
         primary: "🔗 Copy play link", secondary: "Not now",
@@ -1699,7 +1744,7 @@
       things: g.things.map(function (t) {
         var box = -1;
         g.things.forEach(function (o, i) { if (o.id === t.inside) box = i; });
-        return [t.emoji, t.name, t.x, t.y, t.size, t.say, t.clue ? 1 : 0, t.clueText, t.exit ? 1 : 0, box];
+        return [t.emoji, t.name, t.x, t.y, t.size, t.say, t.clue ? 1 : 0, t.clueText, t.exit ? 1 : 0, box, t.art ? 1 : 0];
       }) };
     return btoa(unescape(encodeURIComponent(JSON.stringify(slim))));
   }
@@ -1708,7 +1753,7 @@
     var g = Object.assign(blankGame(), o);
     g.things = (o.things || []).map(function (a, i) {
       return { id: "s" + i, emoji: a[0], name: a[1], x: a[2], y: a[3], size: a[4], say: a[5], clue: !!a[6], clueText: a[7], exit: !!a[8],
-               inside: a[9] >= 0 ? "s" + a[9] : "" };
+               inside: a[9] >= 0 ? "s" + a[9] : "", art: a[10] ? artFor(a[1]) : "" };
     });
     return g;
   }
