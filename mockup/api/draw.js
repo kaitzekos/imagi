@@ -30,6 +30,11 @@ const WORDS = new Set((
   "vampire vase violin volcano wave whale whiteboard window witch wizard wrench yarn zombie " +
   // example game and classroom words
   "shop space round outside classroom student school " +
+  // common escape-room things
+  "button control panel screen lever switch keypad keyboard alarm wire cable pipe vent drawer cupboard cabinet " +
+  "bookcase curtain wardrobe closet fan heater sink bench stool shelves frame portrait hourglass padlock chain " +
+  "station world earth galaxy helmet spacesuit engine machine dial gear bottle bowl plate spoon fork pan kettle " +
+  "suitcase mailbox clipboard folder notebook diary codebook sticker marker chalk eraser ruler calculator " +
   // colours, sizes, moods
   "red orange yellow green blue purple pink brown black white grey gray gold golden silver rainbow " +
   "big small tiny giant huge little old new tall short round square fat thin long " +
@@ -42,7 +47,9 @@ const WORDS = new Set((
 export async function GET(request) {
   const thing = (new URL(request.url).searchParams.get("thing") || "").trim().toLowerCase();
   const words = thing.split(/[ -]+/);
-  if (thing.length > 39 || !words.every(w => WORDS.has(w))) return new Response("Can't draw that", { status: 400 });
+  // "planets" and "boxes" count as "planet" and "box".
+  const known = w => WORDS.has(w) || WORDS.has(w.replace(/es$/, "")) || WORDS.has(w.replace(/s$/, ""));
+  if (thing.length > 39 || !words.every(known)) return new Response("Can't draw that", { status: 400 });
   if (!process.env.OPENAI_API_KEY) return new Response("Drawing is not set up", { status: 503 });
 
   const r = await fetch("https://api.openai.com/v1/images/generations", {
