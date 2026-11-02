@@ -4,10 +4,12 @@
 
 // {thing} is the object's name; {place} is the child's world, so "buttons" in a space station
 // become launch buttons, not sewing buttons.
+// {look} is the child's colours and mood; {role} says if it is the locked exit or hides the clue.
+// The code, hint and messages are never sent, so a picture can't give the answer away.
 const STYLE =
-  "One clickable object for a children's escape-room game{place}. The object is: {thing}. " +
+  "One clickable object for a children's escape-room game{place}. The object is: {thing}.{role} " +
   "Draw it the way it would look in that place. If the name is a place or an idea, draw one small object that shows it, " +
-  "like a round window or a sign. Soft clay toy style, chunky simple shapes, warm friendly colours, gentle light. " +
+  "like a round window or a sign. {look}Soft clay toy style, chunky simple shapes, gentle light. " +
   "Whole object visible and centred, three-quarter view. Family friendly. " +
   "No words, letters or numbers, no background, no floor.";
 
@@ -42,6 +44,8 @@ const WORDS = new Set((
   "red orange yellow green blue purple pink brown black white grey gray gold golden silver rainbow " +
   "big small tiny giant huge little old new tall short round square fat thin long " +
   "happy sad sleepy grumpy silly funny friendly angry scared shy cute fluffy shiny sparkly glowing magic magical " +
+  "dark light bright quiet calm cosy cozy spooky creepy mysterious warm cold cool colourful colorful pastel neon " +
+  "sunny gloomy soft loud wild crazy cheerful peaceful strange weird futuristic ancient " +
   "wooden metal glass paper broken empty secret locked open floating flying talking dancing singing " +
   // joining and place words
   "a an the of with and in on lot lots inside outside under near at top bottom deep high far room house home " +
@@ -63,6 +67,10 @@ export async function GET(request) {
     if (w && known(w)) run.push(w); else { if (run.length > best.length) best = run; run = []; }
   }
   const place = best.slice(0, 8).join(" ");
+  // Colours and mood: every known word, in order, at most 8 ("Dark blue and silver. Quiet." -> "dark blue and silver quiet").
+  const look = (params.get("look") || "").toLowerCase().replace(/[^a-z '-]/g, " ").split(/\s+/).filter(w => w && known(w)).slice(0, 8).join(" ");
+  const role = { exit: " It is the locked way out: show a big lock or keypad on it.",
+                 clue: " It hides the clue: give it one small, curious detail that invites a closer look." }[params.get("role")] || "";
   if (!process.env.OPENAI_API_KEY) return new Response("Drawing is not set up", { status: 503 });
 
   const r = await fetch("https://api.openai.com/v1/images/generations", {
@@ -70,7 +78,9 @@ export async function GET(request) {
     headers: { Authorization: "Bearer " + process.env.OPENAI_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: process.env.IMAGE_MODEL || "gpt-image-1-mini",
-      prompt: STYLE.replace("{thing}", thing).replace("{place}", place ? ", set " + (/^(in|inside|on|under|at)\b/.test(place) ? "" : "in ") + place : ""),
+      prompt: STYLE.replace("{thing}", thing).replace("{role}", role)
+        .replace("{place}", place ? ", set " + (/^(in|inside|on|under|at)\b/.test(place) ? "" : "in ") + place : "")
+        .replace("{look}", look ? "Colours and mood: " + look + ". " : "Warm friendly colours. "),
       size: "1024x1024",
       quality: "low",
       background: "transparent",

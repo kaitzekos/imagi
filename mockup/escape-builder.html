@@ -588,17 +588,26 @@
 
   // Picture prompts for the example's things (Zib and Blorp are aliens).
   ["green alien", "purple space monster", "shop receipt", "round window with a planet outside", "donut", "snack fridge"]
-    .forEach(function (w, i) { EXAMPLE.things[i].art = artFor(w, "a snack shop on a spaceship"); });
+    .forEach(function (w, i) {
+      EXAMPLE.things[i].art = artFor(w, { world: "a snack shop on a spaceship", mood: EXAMPLE.mood }, i === 5 ? "exit" : i === 2 ? "clue" : "");
+    });
 
   // ---------- pictures: drawn by /api/draw on the hosted page (PLAN.md D13) ----------
-  // The child's world goes along, so things are drawn to fit it. The server keeps only safe, known words.
+  // Pictures get better as the moves go on: the world (move 1), the colours and mood (move 3),
+  // which thing is the locked exit (move 5) and which hides the clue (move 7) all go into the drawing.
+  // The code, hint and messages never do. The server keeps only safe, known words.
   // Opened as a local file, or if drawing fails, the emoji stays.
-  function artFor(name, world) {
+  function artFor(name, g, role) {
     var w = lower(name).replace(/[^a-z '-]/g, "").replace(/\s+/g, " ").trim().slice(0, 39);
     if (location.protocol === "file:" || !/^[a-z]/.test(w) || /^thing$/.test(w)) return "";
-    var place = lower(world).replace(/[^a-z '-]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
-    return "/api/draw?thing=" + encodeURIComponent(w) + (place ? "&in=" + encodeURIComponent(place) : "");
+    var clean = function (s) { return lower(s).replace(/[^a-z '-]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80); };
+    var place = clean(g && g.world), look = clean(g && g.mood);
+    return "/api/draw?thing=" + encodeURIComponent(w) + (place ? "&in=" + encodeURIComponent(place) : "") +
+      (look ? "&look=" + encodeURIComponent(look) : "") + (role ? "&role=" + role : "");
   }
+  function artOf(t, g) { return artFor(t.name, g, t.exit ? "exit" : t.clue ? "clue" : ""); }
+  // Called when an answer that changes the pictures comes in.
+  function redraw(g) { g.things.forEach(function (t) { t.art = artOf(t, g); }); }
   // One request per picture per page, however often the room re-renders.
   var ART = {};
   function whenArt(url, cb) {
@@ -695,7 +704,7 @@
   // Things and badges that should animate in on the next render.
   var FRESH = {}, FRESH_BADGE = {};
   function newThing(name) {
-    var t = { id: uid(), emoji: emojiFor(name), art: artFor(name, state.game.world), name: name, x: 50, y: 60, size: CREATURE.test(name) ? 86 : 68,
+    var t = { id: uid(), emoji: emojiFor(name), art: artFor(name, state.game), name: name, x: 50, y: 60, size: CREATURE.test(name) ? 86 : 68,
               say: "", clue: false, clueText: "", exit: false, inside: "" };
     FRESH[t.id] = true;
     return t;
@@ -705,12 +714,12 @@
   // Each move: one question, why builders ask it, help only when asked, and what the answer builds.
   var MOVES = [
     { key: "world", q: "Where is your escape room? Tell me one place with one strange detail.",
-      why: "Builders start with a place. A strange detail makes it worth exploring.",
+      why: "Game makers start with a place. A strange detail makes it worth exploring.",
       ph: "My escape room is...",
       stuck: ["Think of a place you know: a kitchen, a bus, a classroom. What's one thing in it that would be weird?",
               "Example: \"A bakery on the moon where the bread floats.\" Now make your own."],
       get: function (g) { return g.world; },
-      set: function (g, v) { g.world = v; },
+      set: function (g, v) { g.world = v; redraw(g); },
       check: function (g, v) { if (words(v) < 4) return "\"" + esc(v) + "\" is a start. What's one strange or funny detail about it?"; },
       ack: function (g) { return "Your world is in. Everything else builds on it."; } },
     { key: "player", q: "Who will try to escape it?",
@@ -726,7 +735,7 @@
       chips: "themes",
       stuck: ["Close your eyes in your room. Is it bright or dark? Cosy or scary? Silly or serious?", "Example: \"Dark blue and silver. Quiet and mysterious.\""],
       get: function (g) { return g.mood; },
-      set: function (g, v) { g.mood = v; if (!state.themePicked) g.theme = themeFromText(v); },
+      set: function (g, v) { g.mood = v; if (!state.themePicked) g.theme = themeFromText(v); redraw(g); },
       ack: function (g) { return "The room has your look now."; } },
     { key: "things", q: "What's in the room? List 4 to 6 things, with commas.",
       why: "Every thing is a place to look. More things make it harder to search.",
@@ -758,7 +767,7 @@
         if (!hit) { hit = newThing(name); g.things.push(hit); }
         g.things.forEach(function (t) { t.exit = t === hit; if (t.exit) { t.clue = false; t.inside = ""; } });
         FRESH_BADGE[hit.id] = true;
-        placeThings(g);
+        placeThings(g); redraw(g);
       },
       ack: function (g) { return "The " + esc(lower(exitOf(g).name)) + " is locked. 🔒"; } },
     { key: "code", q: "What's the secret code? 3 numbers or one word.",
@@ -779,7 +788,7 @@
       set: function (g, v) {
         var id = state.clueFor || (g.things.filter(function (t) { return !t.exit; })[0] || {}).id;
         g.things.forEach(function (t) { t.clue = t.id === id; if (t.clue) t.clueText = v; });
-        FRESH_BADGE[id] = true;
+        FRESH_BADGE[id] = true; redraw(g);
       },
       check: function (g, v) {
         if (!state.clueFor) return "First tap the thing where your clue hides.";
@@ -831,7 +840,7 @@
           if (s.step === "idea") s.step = "ask";
           // Games saved before pictures existed get them from their names.
           // Pictures follow the latest drawing rules (name plus world).
-          (s.game.things || []).forEach(function (t) { if (t.art !== "" || !("art" in t)) t.art = artFor(t.name, s.game.world); });
+          (s.game.things || []).forEach(function (t) { if (t.art !== "" || !("art" in t)) t.art = artOf(t, s.game); });
           return Object.assign(blankState(), s);
         }
       }
@@ -932,7 +941,7 @@
       if (has(g.hint, code)) return "Your hint shows the code. Should a hint give the answer, or help them find the clue? What would each choice do to your puzzle?";
       if (!filled(g.wrong)) return "What happens when someone types the wrong code? Write a short, funny message that fits your world.";
       if (!filled(g.ending)) return "What happens when someone escapes? Write your ending.";
-      if (!filled(g.solution)) return "One builder question: how does a player get from your clue to " + esc(code) + "? Writing it down helps you spot an unfair clue.";
+      if (!filled(g.solution)) return "One game maker question: how does a player get from your clue to " + esc(code) + "? Writing it down helps you spot an unfair clue.";
       if (filled(g.player)) return "Clue, code, hint and ending are all there. You're building it for \"" + esc(g.player.trim()) + "\". Could they work it out without help? Test it to find out.";
       return "Clue, code, hint and ending are all there. Now test it. What do you think a new player will click first?";
     }
@@ -1132,7 +1141,9 @@
         "<button class=\"tool\" type=\"button\" data-tool=\"player\">👀 Give to a player</button>" +
         (state.versions.length ? "<button class=\"tool\" type=\"button\" data-tool=\"versions\">🗂️ Versions</button>" : "")
       : "";
-    $("stTip").textContent = state.step === "ask" ? (g.things.length ? "Your room builds as you answer. Drag things to move them. 🔒 = exit, 🔎 = clue." : "")
+    $("stTip").textContent = state.step === "ask" && state.move >= MOVES.length
+      ? "🪄 This is a quick sketch of your plan. Your real game, built in Lovable, will look and play much better. Go build it there!"
+      : state.step === "ask" ? (g.things.length ? "Your room builds as you answer. Drag things to move them. 🔒 = exit, 🔎 = clue." : "")
       : state.step === "build" || state.step === "escape"
       ? "Drag things to move them. Click a thing to change it. 🔒 = exit, 🔎 = holds a clue."
       : "";
@@ -1308,7 +1319,7 @@
     h += "<div class=\"mv-top\"><b>Move " + (n + 1) + " of " + MOVES.length + "</b><span class=\"dots\">";
     for (var i = 0; i < MOVES.length; i++) h += "<i class=\"" + (i < n ? "done" : i === n ? "now" : "") + "\"></i>";
     h += "</span></div>";
-    h += "<p class=\"why\">🧱 <b>Why builders ask this:</b> " + m.why + "</p>";
+    h += "<p class=\"why\">🧱 <b>Why game makers ask this:</b> " + m.why + "</p>";
     if (m.chips === "themes") {
       h += "<div class=\"chips\">";
       Object.keys(THEMES).forEach(function (k) {
@@ -1538,6 +1549,8 @@
       "MY WORLD: " + world + "\n" +
       "MY CLUE: " + clue + "\n" +
       "MY CODE: " + (filled(g.code) ? g.code.trim() : "______") + "\n" +
+      "MY HINT: " + (filled(g.hint) ? g.hint.trim() : "______") + "\n" +
+      "MY WRONG-CODE MESSAGE: " + (filled(g.wrong) ? g.wrong.trim() : "______") + "\n" +
       "MY ENDING: " + (filled(g.ending) ? g.ending.trim() : "______") + "\n" +
       "WHO WILL PLAY IT: " + (filled(g.player) ? g.player.trim().replace(/[.!]+$/, "") + ". Make the clue and hint fair for them." : "______") + "\n" +
       "MY COLOURS AND MOOD: " + (filled(g.mood) ? g.mood.trim() : "______") + "\n\n" +
@@ -1612,12 +1625,12 @@
     // A picture is drawn when the name is finished, not on every key.
     if (el.dataset.tk === "name") {
       var nt = thingById(el.dataset.id); if (!nt) return;
-      nt.art = artFor(nt.name, g.world); save(); renderRoom(); return;
+      nt.art = artOf(nt, g); save(); renderRoom(); return;
     }
     if (act === "clue") {
       var t = thingById(el.dataset.id); if (!t) return;
       t.clue = el.checked; if (t.clue) { t.exit = false; FRESH_BADGE[t.id] = true; }
-      save(); renderAll(); return;
+      redraw(g); save(); renderAll(); return;
     }
     if (act === "exit" || act === "exitsel") {
       var id = act === "exit" ? el.dataset.id : el.value;
@@ -1626,7 +1639,7 @@
         if (x.exit) { x.clue = false; x.inside = ""; FRESH_BADGE[x.id] = true; }
         if (x.inside === id) x.inside = "";   // nothing hides inside the locked exit
       });
-      save(); renderAll(); return;
+      redraw(g); save(); renderAll(); return;
     }
     if (act === "inside") {
       var it = thingById(el.dataset.id); if (!it) return;
@@ -1755,7 +1768,7 @@
 
   // ---------- sharing: the whole game lives in the link ----------
   function encodeGame(g) {
-    var slim = { title: g.title, world: g.world, theme: g.theme, code: g.code, hint: g.hint, wrong: g.wrong, ending: g.ending,
+    var slim = { title: g.title, world: g.world, mood: g.mood, theme: g.theme, code: g.code, hint: g.hint, wrong: g.wrong, ending: g.ending,
       things: g.things.map(function (t) {
         var box = -1;
         g.things.forEach(function (o, i) { if (o.id === t.inside) box = i; });
@@ -1768,7 +1781,7 @@
     var g = Object.assign(blankGame(), o);
     g.things = (o.things || []).map(function (a, i) {
       return { id: "s" + i, emoji: a[0], name: a[1], x: a[2], y: a[3], size: a[4], say: a[5], clue: !!a[6], clueText: a[7], exit: !!a[8],
-               inside: a[9] >= 0 ? "s" + a[9] : "", art: a[10] ? artFor(a[1], o.world) : "" };
+               inside: a[9] >= 0 ? "s" + a[9] : "", art: a[10] ? artFor(a[1], o, a[8] ? "exit" : a[6] ? "clue" : "") : "" };
     });
     return g;
   }
