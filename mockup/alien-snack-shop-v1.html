@@ -1,0 +1,423 @@
+<!doctype html>
+<!--
+  LOCAL PREVIEW ONLY. Not the deliverable, not a Lovable build, not test evidence.
+  Built only from lovable/starting-prompt.md (revised 2026-10-26, five blanks + layout lines)
+  with the blanks from lovable/example-alien-snack-shop.md.
+  Each "GUESS" comment marks a choice the prompt did not decide.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alien Snack Shop</title>
+<style>
+  /* MY COLOURS AND MOOD: Warm lilac and lime green. Cosy and silly. */
+  :root {
+    --paper: #fbf6ec;
+    --ink: #2b2140;
+    --wall: #e9e0ff;
+    --wall-2: #dccfff;
+    --floor: #f1e3cc;
+    --lilac: #c9b6ff;
+    --lilac-deep: #a98bf2;
+    --lime: #d9f26f;
+    --lime-2: #c2e04f;
+    --lime-3: #addb5a;
+    --wood: #e8d3b0;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Trebuchet MS", system-ui, "Segoe UI", Arial, sans-serif;
+    font-size: 20px;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 12px 16px 16px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+
+  /* 1. At the top: a game name and a goal line */
+  /* GUESS: the name. The prompt says "a game name from my world"; MY WORLD has no name, so it is made up. */
+  header {
+    display: flex; flex-wrap: wrap; gap: 8px 24px;
+    align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  h1 { margin: 0; font-size: 44px; font-weight: 900; letter-spacing: -1px; }
+  h1 .spark { color: var(--lilac-deep); font-size: 28px; vertical-align: middle; }
+  /* GUESS: the goal line. The prompt's example says "exit"; it is changed to "fridge" to fit the world. */
+  .goal { margin: 0; font-size: 22px; font-weight: 700; }
+
+  /* 2. The room fills most of the screen */
+  .room {
+    position: relative;
+    height: clamp(420px, calc(100vh - 200px), 620px);
+    border-radius: 24px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 20% 20%, #fff7 0 12%, transparent 30%),
+      linear-gradient(var(--wall) 0 62%, var(--floor) 62% 100%);
+  }
+  .deco { position: absolute; color: var(--lilac-deep); opacity: .6; pointer-events: none; }
+
+  .thing {
+    position: absolute;
+    border: 0; background: transparent; padding: 0;
+    transition: transform .15s;
+  }
+  .thing:hover { transform: translateY(-4px) scale(1.03); }
+
+  /* Snack shelf */
+  /* GUESS: which things are in the room. The idea names a receipt, a fridge and three aliens; the shelf is made up. */
+  #shelf { left: 27%; top: 6%; width: 33%; height: 34%; }
+  .board {
+    position: absolute; left: 0; right: 0; height: 12px;
+    background: var(--lilac-deep); border-radius: 6px;
+  }
+  .row {
+    position: absolute; left: 6%; right: 6%;
+    display: flex; justify-content: space-around; font-size: 40px;
+  }
+
+  /* Counter */
+  .counter-top {
+    position: absolute; left: -2%; width: 72%; top: 60%; height: 7%;
+    background: var(--lilac); border-radius: 14px; z-index: 3;
+  }
+  .counter-front {
+    position: absolute; left: 0; width: 69%; top: 66%; bottom: 0;
+    background: repeating-linear-gradient(90deg, var(--wood) 0 46px, #e0c79f 46px 50px);
+    z-index: 3;
+  }
+
+  /* Receipt on the counter */
+  #receipt { left: 40%; top: 50%; z-index: 4; transform: rotate(-6deg); }
+  #receipt:hover { transform: rotate(-6deg) translateY(-4px) scale(1.05); }
+  .paper {
+    display: block; width: 64px; height: 84px; background: #fff;
+    border-radius: 3px; box-shadow: 0 3px 0 #0001;
+    clip-path: polygon(0 0, 100% 0, 100% 92%, 88% 100%, 75% 92%, 62% 100%, 50% 92%, 38% 100%, 25% 92%, 12% 100%, 0 92%);
+    padding: 10px 8px;
+  }
+  .paper i { display: block; height: 5px; margin: 6px 0; background: #cfc6e0; border-radius: 3px; }
+
+  /* Aliens, drawn with shapes. Size comes from font-size. */
+  .alien { bottom: 36%; z-index: 2; font-size: 18px; }
+  .alien > span { display: block; position: relative; margin: 0 auto; }
+  .a-head {
+    width: 6em; height: 5em; background: var(--c);
+    border-radius: 50% 50% 46% 46% / 56% 56% 44% 44%;
+  }
+  .ant {
+    position: absolute; top: -1.5em; width: .3em; height: 1.8em; background: var(--c);
+    border-radius: .2em;
+  }
+  .ant::after {
+    content: ""; position: absolute; top: -.6em; left: -.35em;
+    width: 1em; height: 1em; border-radius: 50%; background: var(--c);
+  }
+  .ant.l { left: 1.6em; transform: rotate(-18deg); }
+  .ant.r { right: 1.6em; transform: rotate(18deg); }
+  .eye {
+    position: absolute; top: 1.4em; width: 1.7em; height: 1.9em;
+    background: #1d1630; border-radius: 50%;
+  }
+  .eye::after {
+    content: ""; position: absolute; top: .3em; left: .35em;
+    width: .5em; height: .5em; background: #fff; border-radius: 50%;
+  }
+  .eye.l { left: 1em; } .eye.r { right: 1em; }
+  .mouth {
+    position: absolute; left: 50%; bottom: .9em; width: 1.4em; height: .7em; margin-left: -.7em;
+    border-bottom: .25em solid #1d1630; border-radius: 0 0 1em 1em;
+  }
+  .a-body {
+    width: 4.6em; height: 3.2em; margin-top: -.4em !important;
+    background: var(--c); border-radius: 1.6em 1.6em .6em .6em;
+  }
+  .a-body::after {
+    content: ""; position: absolute; left: .9em; right: .9em; top: 1.1em; bottom: 0;
+    background: var(--lilac-deep); border-radius: .5em .5em 0 0;
+  }
+  #alien1 { left: 3%;  --c: var(--lime); font-size: 21px; }
+  #alien2 { left: 17%; --c: var(--lime-3); font-size: 15px; }
+  #alien3 { left: 51%; --c: var(--lime-2); font-size: 17px; }
+  #alien2 .eye { width: 1.2em; height: 1.4em; } /* silly: smaller eyes */
+  #alien3 .a-head { border-radius: 50%; }       /* silly: round head */
+
+  /* 4. The exit: the fridge, with the code box on it */
+  /* GUESS: the fridge is the exit (MY WORLD and MY ENDING both name it). */
+  .fridge {
+    position: absolute; right: 3%; top: 5%; bottom: 6%;
+    width: 25%; min-width: 230px;
+    perspective: 900px; z-index: 2;
+  }
+  .fridge-inside {
+    position: absolute; inset: 0; border-radius: 22px;
+    background: #fffdf7; border: 10px solid var(--lilac-deep);
+    display: flex; flex-direction: column; justify-content: space-around; align-items: center;
+    font-size: 40px;
+  }
+  .door {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--lilac) 0 92%, var(--lilac-deep) 92%);
+    border-radius: 22px;
+    transform-origin: right center;
+    transition: transform .9s cubic-bezier(.3,1.4,.5,1);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 14px 14px 18px;
+  }
+  .handle {
+    position: absolute; left: 14px; top: 32%; width: 12px; height: 26%;
+    background: #ece6f8; border-radius: 8px; pointer-events: none;
+  }
+  #fridgeTop {
+    position: static; width: 100%; flex: 1;
+    display: flex; align-items: flex-start; justify-content: flex-end;
+    font-size: 34px; padding: 6px 10px;
+  }
+  #fridgeTop:hover { transform: none; }
+  .lock {
+    width: 100%;
+    background: #f6f1ff; border-radius: 16px; padding: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: inset 0 0 0 3px var(--lilac-deep);
+  }
+  .lock-pics { font-size: 34px; letter-spacing: 6px; }
+  .lock-row { display: flex; gap: 8px; width: 100%; }
+  .lock input {
+    flex: 1; min-width: 0;
+    font: inherit; font-size: 28px; font-weight: 700; text-align: center;
+    padding: 8px; border-radius: 12px; border: 3px solid var(--ink); background: #fff;
+  }
+  .btn-open {
+    border: 0; border-radius: 12px; padding: 8px 16px;
+    background: var(--lime); font-size: 22px; font-weight: 800;
+    box-shadow: 0 4px 0 var(--lime-3);
+  }
+  .won .door { transform: rotateY(-115deg); }
+
+  /* Receipt close-up */
+  /* GUESS: the close-up appears as a card over the room, not in the message bar (it won't fit there). */
+  .closeup {
+    position: absolute; left: 30%; top: 12%; z-index: 10;
+    width: 330px; padding: 20px 22px 34px;
+    background: #fff; border-radius: 6px; transform: rotate(-2deg);
+    font-family: "Courier New", monospace; font-size: 22px; line-height: 1.6;
+    box-shadow: 0 10px 30px #2b214033;
+    clip-path: polygon(0 0, 100% 0, 100% 95%, 90% 100%, 80% 95%, 70% 100%, 60% 95%, 50% 100%, 40% 95%, 30% 100%, 20% 95%, 10% 100%, 0 95%);
+  }
+  .closeup b { display: block; text-align: center; margin-bottom: 6px; }
+  .closeup .line {
+    display: flex; justify-content: space-between; gap: 12px;
+    border-bottom: 2px dotted #bbb; padding: 2px 0;
+  }
+
+  /* Ending */
+  /* GUESS: the ending plays inside the room (the fridge opens in place) so the bottom bar stays visible. */
+  .banner {
+    position: absolute; left: 50%; top: 8%; transform: translateX(-60%);
+    z-index: 11; background: var(--lime); border-radius: 20px; padding: 12px 26px;
+    font-size: 40px; font-weight: 900; box-shadow: 0 6px 0 var(--lime-3);
+  }
+  .float {
+    position: absolute; z-index: 12; font-size: 44px; pointer-events: none;
+    animation: up 3.2s ease-out infinite;
+  }
+  @keyframes up {
+    from { transform: translate(0, 0) rotate(0); opacity: 1; }
+    to   { transform: translate(var(--dx), -480px) rotate(240deg); opacity: 0; }
+  }
+  .won .alien { animation: bounce .6s ease-in-out infinite alternate; }
+  .won #alien2 { animation-delay: .2s; } .won #alien3 { animation-delay: .4s; }
+  @keyframes bounce { to { transform: translateY(-22px); } }
+  @media (prefers-reduced-motion: reduce) {
+    .float, .won .alien { animation: none; }
+    .door { transition: none; }
+  }
+
+  /* 7 and 8. One message bar, Hint and Restart along the bottom */
+  /* GUESS: the message bar sits in the middle of the bottom bar. The prompt doesn't say where it goes. */
+  .bottom {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+    margin-top: 12px;
+  }
+  .big {
+    border: 0; border-radius: 999px; padding: 16px 30px;
+    background: var(--lilac); font-size: 24px; font-weight: 800;
+    box-shadow: 0 5px 0 var(--lilac-deep);
+  }
+  .big:active, .btn-open:active { transform: translateY(3px); box-shadow: none; }
+  .bar {
+    min-height: 64px; border-radius: 999px; padding: 12px 26px;
+    background: #efe9f7; display: flex; align-items: center; justify-content: center;
+    text-align: center; font-size: 21px; font-weight: 600; line-height: 1.3;
+  }
+  .bar.wrong { background: #ffe0e3; }
+  .bar.win { background: var(--lime); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1><span class="spark">✦</span> Alien Snack Shop <span class="spark">✦</span></h1>
+    <p class="goal">Find the clue. Open the fridge.</p>
+  </header>
+
+  <main class="room" id="room" aria-label="A tiny snack shop on a spaceship, run by three silly aliens. The snack fridge is locked.">
+    <span class="deco" style="left:3%;top:6%;font-size:26px">✦</span>
+    <span class="deco" style="left:12%;top:16%;font-size:16px">✦</span>
+    <span class="deco" style="left:64%;top:10%;font-size:20px">✦</span>
+    <span class="deco" style="left:20%;top:4%;font-size:30px">🪐</span>
+
+    <button class="thing" id="shelf" type="button" aria-label="Snack shelf">
+      <span class="row" style="top:4%">🍪 🍩 🍭</span>
+      <span class="board" style="top:42%"></span>
+      <span class="row" style="top:52%">🧁 🍬 🍫</span>
+      <span class="board" style="bottom:0"></span>
+    </button>
+
+    <button class="thing alien" id="alien1" type="button" aria-label="Alien Zib">
+      <span class="a-head"><span class="ant l"></span><span class="ant r"></span><span class="eye l"></span><span class="eye r"></span><span class="mouth"></span></span>
+      <span class="a-body"></span>
+    </button>
+    <button class="thing alien" id="alien2" type="button" aria-label="Alien Blorp">
+      <span class="a-head"><span class="ant l"></span><span class="ant r"></span><span class="eye l"></span><span class="eye r"></span><span class="mouth"></span></span>
+      <span class="a-body"></span>
+    </button>
+    <button class="thing alien" id="alien3" type="button" aria-label="Alien Squee">
+      <span class="a-head"><span class="ant l"></span><span class="ant r"></span><span class="eye l"></span><span class="eye r"></span><span class="mouth"></span></span>
+      <span class="a-body"></span>
+    </button>
+
+    <span class="counter-top"></span>
+    <span class="counter-front"></span>
+
+    <button class="thing" id="receipt" type="button" aria-label="Receipt on the counter">
+      <span class="paper"><i></i><i></i><i></i><i></i></span>
+    </button>
+
+    <div class="fridge">
+      <div class="fridge-inside" aria-hidden="true"><span>🍩 🍪</span><span>🍭 🧁</span><span>🍫 🍬</span></div>
+      <div class="door">
+        <span class="handle"></span>
+        <button class="thing" id="fridgeTop" type="button" aria-label="Snack fridge">❄️</button>
+        <!-- The clue's lock pictures, then the code box and Open button, on the door -->
+        <form class="lock" onsubmit="return false">
+          <span class="lock-pics" aria-label="Lock pictures: Rocket, Star, Moon">🚀⭐🌙</span>
+          <div class="lock-row">
+            <!-- GUESS: Enter does nothing; only the Open button opens. -->
+            <input id="code" type="text" autocomplete="off" maxlength="12" aria-label="Code">
+            <button class="btn-open" id="open" type="button">Open</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="closeup" id="closeup" hidden>
+      <b>ALIEN SNACK SHOP</b>
+      <!-- GUESS: the receipt shows emoji next to the snack names so they match the lock pictures. -->
+      <span class="line"><span>⭐ Star snack</span><span>4</span></span>
+      <span class="line"><span>🌙 Moon snack</span><span>2</span></span>
+      <span class="line"><span>🚀 Rocket snack</span><span>7</span></span>
+      <b style="margin-top:8px">THANK YOU, EARTHLING</b>
+    </div>
+
+    <div class="banner" id="banner" hidden>🎉 Snack party! 🎉</div>
+  </main>
+
+  <div class="bottom">
+    <button class="big" id="hint" type="button">💡 Hint</button>
+    <div class="bar" id="bar" aria-live="polite"></div>
+    <button class="big" id="restart" type="button">↻ Restart</button>
+  </div>
+
+</div>
+
+<script>
+  var CODE = "742";
+  // GUESS: the first message. The prompt does not say what the bar shows before any click.
+  var START_MSG = "Click things in the shop to look around.";
+
+  var messages = {
+    shelf: "Snacks! But the best snacks are locked in the fridge.",
+    alien1: "Zib says: \"I counted the snacks. Then I ate the counting.\"",
+    alien2: "Blorp says: \"The fridge only opens for the right three numbers. Blorp forgot them.\"",
+    alien3: "Squee says: \"Squee! I paid for snacks. Squee kept the receipt somewhere.\"",
+    fridgeTop: "The fridge is locked. The lock shows three pictures: Rocket, Star, Moon."
+  };
+  // GUESS: different messages for wrong and empty.
+  var WRONG_MSG = "Bzzt! The fridge burps at you. Still locked.";
+  var EMPTY_MSG = "The fridge stares at you. You typed... nothing. Still locked.";
+  // GUESS: the hint names the counter, not the receipt, and is the same every time (even on the ending).
+  var HINT_MSG = "Hint: look at what is on the counter. Then look at the pictures on the lock.";
+  var ENDING_MSG = "The fridge pops open, snacks float out and the aliens throw a snack party.";
+
+  var el = function (id) { return document.getElementById(id); };
+  var room = el("room"), bar = el("bar"), closeup = el("closeup");
+
+  function say(text, kind) {
+    bar.textContent = text;
+    bar.className = "bar" + (kind ? " " + kind : "");
+  }
+
+  // GUESS: a close-up stays open until another thing is clicked, the close-up itself is clicked, or Restart.
+  function hideCloseup() { closeup.hidden = true; }
+  closeup.addEventListener("click", hideCloseup);
+
+  Object.keys(messages).forEach(function (id) {
+    el(id).addEventListener("click", function () { hideCloseup(); say(messages[id]); });
+  });
+  el("receipt").addEventListener("click", function () {
+    closeup.hidden = false;
+    say("You pick up the receipt from the counter.");
+  });
+
+  el("open").addEventListener("click", function () {
+    hideCloseup();
+    // GUESS: spaces before and after are ignored; "7 4 2" counts as wrong.
+    var typed = el("code").value.trim();
+    if (typed === "") { say(EMPTY_MSG, "wrong"); return; }
+    if (typed !== CODE) { say(WRONG_MSG, "wrong"); return; } // GUESS: the box keeps the wrong code.
+    win();
+  });
+
+  el("hint").addEventListener("click", function () { say(HINT_MSG); });
+
+  var floaters = [];
+  function win() {
+    room.classList.add("won");
+    el("banner").hidden = false;
+    el("code").blur();
+    say(ENDING_MSG, "win");
+    var snacks = ["🍩", "🍪", "⭐", "🌙", "🚀", "🍬", "🧁", "🍭", "🍫"];
+    for (var i = 0; i < 14; i++) {
+      var s = document.createElement("span");
+      s.className = "float";
+      s.textContent = snacks[i % snacks.length];
+      s.style.right = (6 + (i % 5) * 4) + "%";
+      s.style.top = (30 + (i % 3) * 15) + "%";
+      s.style.setProperty("--dx", (-60 - i * 28) + "px");
+      s.style.animationDelay = (i * 0.2) + "s";
+      room.appendChild(s);
+      floaters.push(s);
+    }
+  }
+
+  el("restart").addEventListener("click", function () {
+    floaters.forEach(function (s) { s.remove(); });
+    floaters = [];
+    room.classList.remove("won");
+    el("banner").hidden = true;
+    hideCloseup();
+    el("code").value = "";
+    say(START_MSG);
+  });
+
+  say(START_MSG);
+</script>
+</body>
+</html>

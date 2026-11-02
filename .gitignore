@@ -1,3 +1,12 @@
 .DS_Store
 .env
 evidence/raw/
+
+# Imaginable's own source files: confidential, never pushed
+Imaginable_Brand_and_Source_Pack/
+Imaginable_*.docx
+Imaginable_*.pptx
+Imaginable_*.pdf
+
+# Vercel CLI link folder
+.vercel/
