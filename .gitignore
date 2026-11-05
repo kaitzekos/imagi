@@ -1,4 +1,4 @@
-.DS_Store
+﻿.DS_Store
 .env
 evidence/raw/
 
@@ -10,3 +10,11 @@ Imaginable_*.pdf
 
 # Vercel CLI link folder
 .vercel/
+/zip/
+
+# Local agent setup and planning: not published
+.claude/
+.github/
+/AGENTS.md
+/CLAUDE.md
+/PLAN.md
