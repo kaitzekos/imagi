@@ -504,6 +504,36 @@
     font-size: 14px; font-weight: 700; opacity: .88;
   }
 
+  /* ---------- things library: every ready picture, searchable ---------- */
+  .libbtn { margin: 10px 0 4px; }
+  .libpop { position: fixed; inset: 0; z-index: 250; background: #211b2b66; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .libbox {
+    background: var(--paper); border-radius: 24px; width: min(980px, 100%); max-height: 88vh;
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; box-shadow: 0 24px 60px #211b2b40;
+  }
+  .libhead { display: grid; gap: 10px; padding: 20px 22px 12px; }
+  .libhead h3 { margin: 0; font-family: var(--f-round); font-size: 26px; }
+  .libhead p { margin: 0; color: var(--muted); font-size: 15px; }
+  .libhead input { font: inherit; font-size: 18px; padding: 12px 16px; border-radius: 14px; border: 2px solid var(--lilac-line); background: var(--white); }
+  .libhead input:focus { border-color: var(--violet); outline: none; }
+  .libgrid {
+    overflow: auto; padding: 4px 22px 16px; display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); align-content: start;
+  }
+  .libgrid button {
+    border: 0; border-radius: 16px; background: var(--white); padding: 8px 6px 10px; cursor: pointer; font: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 1px 4px #211b2b14;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .libgrid button:hover { transform: translateY(-2px); box-shadow: 0 6px 14px #211b2b22; }
+  .libgrid button:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
+  .libgrid button.on { background: var(--lime); }
+  .libgrid img { width: 72px; height: 72px; object-fit: contain; }
+  .libgrid span { font-size: 14px; font-weight: 700; line-height: 1.2; text-align: center; }
+  .libempty { grid-column: 1 / -1; color: var(--muted); padding: 20px 0; text-align: center; }
+  .libfoot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 22px 18px; background: var(--lilac-2); }
+  .libfoot p { margin: 0; font-weight: 700; }
+
   #toast {
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100;
     background: var(--ink); color: var(--white); border-radius: 999px; padding: 10px 20px; font-weight: 700;
@@ -658,7 +688,6 @@
       </div>
     </div>
   </div>
-  <p class="intro-foot">Concept prototype by Kai for Imaginable. Scripted guide. Not yet tested with children.</p>
 </section>
 
 <div id="app">
@@ -1721,6 +1750,8 @@
     }
     var val = state.draft != null ? state.draft : (m.get(g) || "");
     h += "<textarea id=\"moveIn\" class=\"bigbox\" data-draft=\"1\" placeholder=\"" + esc(m.ph) + "\">" + esc(val) + "</textarea>";
+    // Things: a library of ready pictures to pick from, or the child's own words.
+    if (m.key === "things") h += "<button class=\"btn ghost wide libbtn\" type=\"button\" data-act=\"library\">📚 Pick from the things library</button>";
     if (state.stuck > 0) {
       h += "<div class=\"stuckbox\">";
       for (var s2 = 0; s2 < state.stuck; s2++) h += "<p>" + (s2 === 0 ? "🤔 " : "💡 ") + esc(m.stuck[s2]) + "</p>";
@@ -1795,6 +1826,7 @@
     }
     if (s === "build") {
       h += "<h2>2. Build your room</h2><p class=\"lead\">Click to add. Drag to move. Mess it up, hide things, make it yours.</p>";
+      h += "<button class=\"btn ghost wide libbtn\" type=\"button\" data-act=\"library\">📚 Things library (" + Object.keys(LIB).length + ")</button>";
       h += "<div class=\"tabs\">";
       Object.keys(PALETTE).forEach(function (k) {
         h += "<button type=\"button\" class=\"" + (state.tab === k ? "on" : "") + "\" data-act=\"tab\" data-tab=\"" + k + "\">" + k + "</button>";
@@ -1923,119 +1955,222 @@
   function go(step) { state.step = step; if (step !== "build") state.sel = state.step === "escape" ? state.sel : null; save(); renderAll(); }
 
   // ---------- Lovable prompt from the room ----------
-  // One long, exact build brief. imagi's builder makes far better games from a full
-  // brief (look, content, screens, rules, build order, checklist) than from a short prompt.
+  // One very detailed build pack, in the shape of the game packs that built best in imagi:
+  // AGENTS.md (how to build), PLAN.md (the game, screens, milestones, checks), CONTENT.md (every word)
+  // and LAYOUT.md (a written screenshot of the room the child built), pasted as one message.
   function lovablePrompt(g) {
-    var B = "______", ex = exitOf(g), cl = cluesOf(g)[0];
-    // One line each; inner double quotes become single so they don't break the brief's own quotes.
+    var B = "______", ex = exitOf(g), cl = cluesOf(g)[0], th = THEMES[g.theme] || THEMES.lilac;
     var tidy = function (s) { return String(s).trim().replace(/\s*\n\s*/g, "; ").replace(/"/g, "'"); };
     var stop = function (s) { return /[.!?]$/.test(s) ? s : s + "."; };
     var andList = function (a) { return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; };
+    var title = filled(g.title) ? g.title.trim() : "";
     var exitName = ex ? lower(ex.name) : "exit";
     var code = filled(g.code) ? g.code.trim() : B;
     var mood = filled(g.mood) ? tidy(g.mood) : B;
     var world = filled(g.world) ? tidy(g.world) : B;
     var player = filled(g.player) ? tidy(g.player).replace(/[.!]+$/, "") : "classmates aged 12";
-    var open = g.things.filter(function (t) { return !t.exit && !t.inside; });
-    var hidden = g.things.filter(function (t) { return t.inside && thingById(t.inside); });
-    var thingLine = function (t) {
-      return "  - " + t.name.trim() + (t.emoji ? " " + t.emoji : "") + ": " + placeWords(t) + ", " + lookWords(t) +
-        (filled(t.say) ? ". When clicked it says \"" + tidy(t.say) + "\"" : "") +
-        (t.clue ? " (this holds the clue)" : "");
-    };
-    var clueLine = cl
-      ? "the " + lower(cl.name) + " shows \"" + tidy(cl.clueText) + "\"." + (filled(g.solution) ? " How to solve it: " + stop(tidy(g.solution)) : "")
-      : B;
+    var outdoor = th.outdoor && !INDOOR.test(g.world || "");
     // Ways of typing the code that must all open the lock.
     var variants = [];
     if (code !== B) {
       var squash = code.replace(/\s+/g, "");
       [code, code.toUpperCase(), code.toLowerCase(), squash.toUpperCase(), squash.toLowerCase(), " " + code + " "].forEach(function (v) {
-        var q = "\"" + v + "\"";
-        if (variants.indexOf(q) === -1) variants.push(q);
+        var q = "\"" + v + "\""; if (variants.indexOf(q) === -1) variants.push(q);
       });
     }
     var wrongTry = /^\d+$/.test(code) ? (code === "999" ? "111" : "999") : (lower(code) === "banana" ? "apple" : "banana");
-    var L = [];
-    L.push("# Build brief: " + (filled(g.title) ? g.title.trim() : "our escape room"));
-    L.push("");
-    L.push("Build a one-screen escape room game for 12-year-olds, played on a school laptop. Read this whole brief before you write any code, then follow it exactly. Everything under \"Our game\" was written by the young makers: use their words as written (fix spelling only) and never swap their ideas for your own. Do not add anything this brief does not ask for.");
-    L.push("");
-    L.push("## Our game");
-    L.push("- Name: " + (filled(g.title) ? g.title.trim() : "make a short, fun name from our world"));
-    L.push("- Our world: " + world);
-    L.push("- Who will play it: " + player + ". Make the clue and the hint fair for them.");
-    L.push("- Colours and mood: " + mood);
-    L.push("- Things in the room, each one clickable:");
-    if (open.length) open.forEach(function (t) { L.push(thingLine(t)); });
-    else L.push("  - 4 to 6 things that belong in our world");
-    hidden.forEach(function (t) {
-      L.push("- Hidden: the " + lower(t.name) + " is inside the " + lower(thingById(t.inside).name) + ". It appears only after the player clicks the " + lower(thingById(t.inside).name) + ".");
+    // Things in front-to-back order, exactly as the builder stacks them.
+    var depth = function (t) { return 10 + Math.round(t.y) + (t.z || 0) * 100; };
+    var things = g.things.slice().sort(function (a, b) { return depth(a) - depth(b); });
+    var letter = {}; g.things.forEach(function (t, i) { letter[t.id] = String.fromCharCode(65 + (i % 26)); });
+    var widthPct = function (t) {
+      var wall = !t.exit && t.y < 48, k = wall ? 1 : Math.max(.85, Math.min(1.18, .85 + (t.y - 50) / 45 * .33));
+      return Math.max(3, Math.round(t.size * k * 1.3 / 1140 * 100));
+    };
+    var mount = function (t) {
+      var n = " " + lower(t.name) + " ", wall = !t.exit && t.y < 48;
+      if (INWALL_RE.test(n)) return "set into the wall like a real " + (/window|vent|hatch|fireplace/.test(n) ? "window" : "doorway") + ": a recessed frame around it, no floor shadow";
+      if (wall && NAIL_RE.test(n)) return "hangs on the wall from a small nail on a thin string";
+      if (wall && TAPE_RE.test(n)) return "taped to the wall with a strip of pale tape at the top";
+      if (wall) return "fixed to the wall, with a soft shadow on the wall behind it";
+      return "stands on the floor, with a soft oval contact shadow under it";
+    };
+    var looks = function (t) {
+      var k = libKey(t.name), w = [];
+      w.push(k && LIB[k] ? "a chunky clay-toy " + lower(t.name) + ", mostly " + LIB[k] : "a chunky clay-toy " + lower(t.name) + " in its natural colours");
+      w.push("seen straight from the front");
+      if (t.flip) w.push("turned around (mirrored) to face the other way");
+      if (t.turn) w.push("swivelled " + Math.abs(t.turn) + " degrees to the " + (t.turn > 0 ? "right" : "left") + " (a 3D turn, so it looks narrower)");
+      if (t.rot) w.push("tilted " + Math.abs(t.rot) + " degrees " + (t.rot > 0 ? "clockwise" : "anticlockwise"));
+      if (t.blend !== false) w.push("lightly tinted with the wall colour so it sits in the room");
+      return w.join(", ");
+    };
+    var A = [], P = [], C = [], Lt = [];
+
+    // ----- AGENTS.md -----
+    A.push("# AGENTS.md: how to build " + (title || "our escape room"));
+    A.push("");
+    A.push("You are building a one-screen escape room game for children aged 12, played on a school laptop. Read PLAN.md, CONTENT.md and LAYOUT.md below before writing any code, and follow all four files exactly. Everything in CONTENT.md and LAYOUT.md was decided by the young makers: use their words and their room as written (fix spelling only) and never swap their ideas for your own.");
+    A.push("");
+    A.push("## Stack");
+    A.push("- Use the project's existing setup. One page, one route.");
+    A.push("- No network requests, no external images, no image files. Draw everything with CSS shapes, gradients, shadows and big emoji.");
+    A.push("- One playful, rounded heading font is fine; body text uses a clear sans-serif.");
+    A.push("- No cookies, accounts, analytics or data collection.");
+    A.push("");
+    A.push("## Rules");
+    A.push("- Put every word, message, clue, code and answer from CONTENT.md in one content file (for example src/game/content.ts) with plain-English comments. Logic reads from it and never hardcodes words, so the makers can change them later.");
+    A.push("- Put every thing's position, size, layer, facing and tilt from LAYOUT.md in the same content file as numbers, so the room can be rearranged without touching the logic.");
+    A.push("- Answer checks ignore capitals, all spaces and punctuation: compare the typed code and the real code with every space and punctuation mark removed." + (variants.length > 1 ? " " + andList(variants) + " must all open it." : ""));
+    A.push("- Never show the code anywhere: not on screen, not in a tooltip, not in alt text, not in the page title.");
+    A.push("- Build in the milestone order in PLAN.md and check each one before moving on.");
+    A.push("- Do not add features, screens, levels, sounds, timers, scores, sign-in, saving, sharing buttons, external links or AI.");
+    A.push("- Keep each file short and readable, with comments a 12-year-old could follow.");
+    A.push("");
+    A.push("## Look and feel");
+    A.push("- Direction: the room is a real place in our world, in our colours and mood: " + stop(mood) + " It should look like a scene from a game, not a web page or a form.");
+    A.push("- Recreate the room in LAYOUT.md as closely as you can: same wall and floor colours, same shape of room, same position, size, layer, facing and tilt for every thing. Aim for a 90% match with the makers' sketch.");
+    A.push("- Every thing is drawn as a chunky, soft clay-toy object (rounded shapes, gentle highlight from the top-left, soft shadow), built from its emoji plus CSS shapes so it matches the description in LAYOUT.md.");
+    A.push("- Every thing reacts when the mouse is over it (lifts 4px with a stronger shadow) and when clicked (a short wiggle), so players can tell it is clickable.");
+    A.push("- Turning and opening are smooth: ease-in-out, about 0.6 seconds.");
+    A.push("- Big text (at least 18px) and big buttons (at least 44px tall), strong contrast. Never use colour as the only signal.");
+    A.push("- The whole game fits a 1366 x 768 laptop screen with no scrolling, and still works on a tablet.");
+    A.push("- Respect prefers-reduced-motion: keep everything visible and drop the movement.");
+    A.push("");
+    A.push("## Child safety");
+    A.push("- Friendly and silly, never scary or violent. Failure is funny. No real people's names.");
+    A.push("");
+    A.push("## Done means");
+    A.push("- Every item on the playtest checklist in PLAN.md passes.");
+    A.push("- The room matches LAYOUT.md: every thing within about 5% of its position, in the same layer order, facing the same way, the same size order.");
+    A.push("- No errors in the browser console.");
+
+    // ----- PLAN.md -----
+    P.push("# PLAN.md: " + (title || "our escape room"));
+    P.push("");
+    P.push("## Pitch");
+    P.push(stop(world) + " The player has to find the clue, work out the secret code and open the " + exitName + " to escape. 60 to 90 seconds of play for " + player + ".");
+    P.push("");
+    P.push("## Puzzle flow");
+    P.push("1. Look around. The player clicks things in the room; each one answers in the message bar.");
+    P.push("2. Find the clue. Clicking the " + (cl ? lower(cl.name) : "thing that holds the clue") + " opens a big, readable close-up.");
+    P.push("3. Work out the code from the clue.");
+    P.push("4. Type the code in the box on the " + exitName + " and press Open.");
+    P.push("5. Escape. The " + exitName + " opens with a short, happy animation and the ending appears.");
+    P.push("");
+    P.push("## Failing");
+    P.push("A wrong code keeps the " + exitName + " shut, shakes the code box and shows the wrong code message. An empty code shows the empty code message. There is no penalty and no limit on tries.");
+    P.push("");
+    P.push("## Screen, top to bottom");
+    P.push("1. Top bar: the game name, large, in the heading font, and the goal line from CONTENT.md.");
+    P.push("2. The room, filling most of the screen, laid out exactly as in LAYOUT.md. The code box and an Open button sit on or right next to the " + exitName + ".");
+    P.push("3. One message bar under the room, big text, rounded. Every click, wrong guess and hint shows here.");
+    P.push("4. Bottom bar: big Hint (left) and Restart (right) buttons, always visible, with the message bar between them.");
+    P.push("When the player escapes, an ending screen covers the room: the ending text, big and joyful, a burst of the room's emoji, and a Play again button that works exactly like Restart.");
+    P.push("");
+    P.push("## Build milestones");
+    P.push("1. The room: back wall, side walls, floor, lamp and rug as in LAYOUT.md. Checkpoint: it matches the room description.");
+    P.push("2. The things: every thing from LAYOUT.md in its place, size, layer, facing and tilt, each with its click message. Checkpoint: compare with the map in LAYOUT.md.");
+    P.push("3. The clue and the lock: close-up, code box, Open button, code check. Checkpoint: the right code opens it; wrong and empty don't.");
+    P.push("4. Hint, Restart and the ending. Checkpoint: Restart after escaping puts everything back.");
+    P.push("5. Polish: hover and click reactions, the opening animation, the clay-toy look. Checkpoint: the playtest checklist below.");
+    P.push("");
+    P.push("## Playtest checklist");
+    P.push("- Every thing in the room shows its message when clicked.");
+    if (cl) P.push("- The clue is easy to read in its close-up, and Close or the Escape key closes it.");
+    if (g.things.some(function (t) { return t.inside; })) P.push("- Each hidden thing appears only after clicking the thing it is inside.");
+    P.push("- " + (variants.length ? "Typing " + andList(variants) + " opens the " + exitName + "." : "The right code opens the " + exitName + "."));
+    P.push("- A wrong code such as \"" + wrongTry + "\" keeps it shut, shakes, shows the wrong code message and never shows the code.");
+    P.push("- An empty code keeps it shut and shows the empty code message.");
+    P.push("- The hint never contains the code.");
+    P.push("- Restart after escaping puts everything back, and the game plays the same the second time.");
+    P.push("- The room matches the map and table in LAYOUT.md.");
+    P.push("- Nothing from the out-of-scope list was added.");
+    P.push("");
+    P.push("## Out of scope");
+    P.push("- Sign-in, accounts, saving, databases, sharing, sounds, timers, scores, levels, AI, image files, internet pictures.");
+
+    // ----- CONTENT.md -----
+    C.push("# CONTENT.md: every word in the game");
+    C.push("");
+    C.push("- Game name: " + (title || "make a short, fun name from our world"));
+    C.push("- Goal line: \"Find the clue. Open the " + exitName + ".\"");
+    C.push("- Our world: " + world);
+    C.push("- Who will play it: " + player + ". Make the clue and the hint fair for them.");
+    C.push("- Colours and mood: " + mood);
+    C.push("- Start message in the message bar: \"Click things in the room to look around.\"");
+    C.push("");
+    C.push("## Things and what they say when clicked");
+    g.things.forEach(function (t) {
+      C.push("- " + letter[t.id] + ". " + t.name.trim() + (t.emoji ? " " + t.emoji : "") + ": " +
+        (filled(t.say) ? "\"" + tidy(t.say) + "\"" : "write one or two playful sentences that fit our world") +
+        (t.clue ? " (holds the clue)" : "") + (t.exit ? " (the locked exit)" : "") +
+        (t.inside && thingById(t.inside) ? " (hidden inside the " + lower(thingById(t.inside).name) + " until it is clicked)" : ""));
     });
-    L.push("- The locked exit: the " + (ex ? lower(ex.name) + (ex.emoji ? " " + ex.emoji : "") + ", " + placeWords(ex) + ", " + lookWords(ex) + (filled(ex.say) ? ". When clicked it says \"" + tidy(ex.say) + "\"" : "") : B));
-    L.push("- The clue: " + clueLine);
-    L.push("- The secret code: " + code);
-    L.push("- Hint button says: " + (filled(g.hint) ? "\"" + tidy(g.hint) + "\"" : "one short hint that points to where the clue is, never the code"));
-    L.push("- Wrong code message: " + (filled(g.wrong) ? "\"" + tidy(g.wrong) + "\"" : "a short, funny message that fits our world"));
-    L.push("- Empty code message: \"Nothing typed. The " + exitName + " stays locked.\"");
-    L.push("- Ending: " + (filled(g.ending) ? tidy(g.ending) : B));
-    L.push("");
-    L.push("## Look and feel");
-    L.push("Direction: the room is a real place in our world, in our colours and mood: " + stop(mood) + " It should look like a scene from a game, not a web page or a form.");
-    L.push("- Draw a back wall and a floor in our colours, with depth: light coming from one side, a soft shadow under each thing, a darker edge where wall meets floor.");
-    L.push("- Draw every thing with CSS shapes and big emoji (at least 64px), matching how we describe it: its size, colours, which way it faces and how it's tilted. Put each one where we placed it (wall or floor, left, middle or right). Never in a grid or a list.");
-    L.push("- Every thing reacts when the mouse is over it (a small lift or glow) and when clicked (a short wiggle), so players can tell it is clickable.");
-    L.push("- The " + exitName + " is the biggest thing in the room. It looks locked (a padlock on it) and opens with a short, happy animation when the code is right.");
-    L.push("- One bold, playful heading font that fits the mood, and easy-to-read body text of at least 18px. Strong contrast everywhere.");
-    L.push("- Buttons are big (at least 44px tall) with clear words. Never use colour as the only signal.");
-    L.push("- The whole game fits a 1366 x 768 laptop screen with no scrolling, and still works on a tablet.");
-    L.push("- Respect prefers-reduced-motion: keep everything visible and drop the movement.");
-    L.push("");
-    L.push("## The screen, top to bottom");
-    L.push("1. Top bar: the game name, and the goal line \"Find the clue. Open the " + exitName + ".\"");
-    L.push("2. The room, filling most of the screen, with the things to click. The code box and an Open button sit on or right next to the " + exitName + ".");
-    L.push("3. One message bar under the room, in big text. Every click, wrong guess and hint shows here.");
-    L.push("4. Bottom bar: big Hint and Restart buttons, always visible.");
-    L.push("When the player escapes, an ending screen covers the room: our ending, big and joyful, and a Play again button that works exactly like Restart.");
-    L.push("");
-    L.push("## Rules");
-    L.push("- Clicking a thing shows its message in the message bar. Where we didn't write one, write one or two playful sentences that fit our world.");
-    if (cl) L.push("- Clicking the " + lower(cl.name) + " opens a big, readable close-up of the clue. A Close button and the Escape key close it.");
-    if (hidden.length) L.push("- Hidden things stay hidden until the player clicks the thing they are inside.");
-    L.push("- Check the code without caring about capitals, spaces or punctuation." + (variants.length > 1 ? " " + andList(variants) + " must all open it." : ""));
-    L.push("- A wrong code keeps the " + exitName + " shut, shakes the code box and shows our wrong code message. Never show the code. Players can try again as often as they like.");
-    L.push("- An empty code keeps it shut and shows the empty code message.");
-    L.push("- The right code opens the " + exitName + " and shows the ending.");
-    L.push("- Hint shows our hint in the message bar. It never shows the code.");
-    L.push("- Restart puts everything back exactly as it was at the start: hidden things hidden, close-ups closed, code box empty, message bar cleared, exit locked, ending gone.");
-    L.push("");
-    L.push("## Keep it simple");
-    L.push("- One screen, one clue, one locked exit, one code. 60 to 90 seconds of play.");
-    L.push("- No sign-in, database, saving, sounds, timer, score, image files, internet pictures, AI inside the game, sharing buttons, external links or extra levels.");
-    L.push("- Friendly and silly, never scary or violent. Suitable for 12-year-olds.");
-    L.push("- Keep all the game's words (names, messages, clue, code, hint, ending) together in one place at the top of the code, with plain-English comments, so we can change them later.");
-    L.push("");
-    L.push("## Build in this order");
-    L.push("1. The room: wall, floor and every thing with its click message. Check every thing can be clicked.");
-    L.push("2. The clue and the lock: the close-up, the code box, the Open button and the code check. Check the right code opens it and wrong or empty codes don't.");
-    L.push("3. Hint, Restart and the ending. Check Restart after escaping puts everything back.");
-    L.push("4. The look: colours, depth, shadows, the hover and click reactions, the opening animation.");
-    L.push("");
-    L.push("## Before you say it's done");
-    L.push("Play it yourself and check every line below. Fix anything that fails, then tell me which lines passed.");
-    L.push("- Every thing in the room shows its message when clicked.");
-    if (cl) L.push("- The clue is easy to read in its close-up.");
-    if (hidden.length) L.push("- Each hidden thing appears only after clicking the thing it is inside.");
-    L.push("- " + (variants.length ? "Typing " + andList(variants) + " opens the " + exitName + "." : "The right code opens the " + exitName + "."));
-    L.push("- A wrong code such as \"" + wrongTry + "\" keeps it shut, shakes, shows our message and never shows the code.");
-    L.push("- An empty code keeps it shut.");
-    L.push("- The hint never contains the code.");
-    L.push("- Restart after escaping puts everything back, and the game plays the same the second time.");
-    L.push("- Nothing from \"Keep it simple\" was added.");
-    L.push("- No errors in the browser console.");
-    L.push("");
-    L.push("When you finish, tell me in plain words what to click to test it.");
-    return L.join("\n");
+    if (!g.things.length) C.push("- 4 to 6 things that belong in our world");
+    C.push("");
+    C.push("## The puzzle");
+    C.push("- The clue (on the " + (cl ? lower(cl.name) : B) + "), shown exactly like this in its close-up: \"" + (cl ? tidy(cl.clueText) : B) + "\"");
+    if (filled(g.solution)) C.push("- How to solve it (never shown to the player): " + stop(tidy(g.solution)));
+    C.push("- The secret code: " + code);
+    C.push("- Hint button says: " + (filled(g.hint) ? "\"" + tidy(g.hint) + "\"" : "one short hint that points to where the clue is, never the code"));
+    C.push("- Wrong code message: " + (filled(g.wrong) ? "\"" + tidy(g.wrong) + "\"" : "a short, funny message that fits our world"));
+    C.push("- Empty code message: \"Nothing typed. The " + exitName + " stays locked.\"");
+    C.push("- Ending: " + (filled(g.ending) ? tidy(g.ending) : B));
+    C.push("- Ending title: \"You escaped!\" Button: \"Play again\".");
+
+    // ----- LAYOUT.md: a written screenshot -----
+    Lt.push("# LAYOUT.md: a written screenshot of the room the makers built");
+    Lt.push("");
+    Lt.push("Positions are measured inside the room box: x from the left edge (0%) to the right edge (100%), y from the top (0%) to the bottom (100%). The x and y are the centre of each thing. Width is a share of the room's width.");
+    Lt.push("");
+    Lt.push("## The room");
+    Lt.push("- Room box: about 16:9, rounded corners (about 24px), filling most of the screen between the top bar and the message bar.");
+    if (outdoor) {
+      Lt.push("- Outdoors: sky colour " + th.wall + " over the top 62%, with a soft light patch at the top; the ground colour " + th.floor + " below a gently wavy horizon at 60-64%, with a few darker ovals (stones, tufts or craters).");
+    } else {
+      Lt.push("- Back wall: colour " + th.wall + ", the rectangle from x 9% to 91% and y 8% to 62%, with a soft warm light patch near the top centre." + (th.name ? " Theme: " + th.name + "." : ""));
+      Lt.push("- Ceiling: a slightly darker band across the top, from the room's top corners to the back wall's top edge at y 8%.");
+      Lt.push("- Side walls: darker shades of the wall colour, slanting in perspective from the room's corners to the back wall (left side from x 0% to 9%, right side from 91% to 100%).");
+      Lt.push("- Floor: colour " + th.floor + ", a trapezoid from the back wall's bottom edge (y 62%, x 9% to 91%) out to the room's bottom corners, with thin floorboards running towards the back, darker near the wall.");
+      Lt.push("- Skirting board: a thin darker strip along the bottom of the back wall at y 60-62%.");
+      Lt.push("- Hanging lamp: from the ceiling at x 50%, a small dark shade at y 6-10% with a soft cone of light down to the floor.");
+      Lt.push("- Rug: a soft oval centred at x 50%, y 83%, about 54% of the room wide and 17% tall, slightly darker than the wall colour, with a dashed pale ring inside it.");
+    }
+    if (th.dark) Lt.push("- It is a dark room: use light text on dark surfaces and keep everything readable.");
+    Lt.push("");
+    Lt.push("## Every thing, back to front");
+    Lt.push("Draw them in this order, so later rows sit in front of earlier ones.");
+    Lt.push("");
+    Lt.push("| Map | Thing | Centre x | Centre y | Width | Where | How it looks |");
+    Lt.push("|---|---|---|---|---|---|---|");
+    things.forEach(function (t) {
+      Lt.push("| " + letter[t.id] + " | " + t.name.trim() + (t.emoji ? " " + t.emoji : "") + (t.exit ? " (locked exit, with a padlock badge and the code box beside it)" : "") + (t.clue ? " (holds the clue)" : "") +
+        " | " + Math.round(t.x) + "% | " + Math.round(t.y) + "% | " + widthPct(t) + "% | " + mount(t) + " | " + looks(t) + " |");
+    });
+    if (!things.length) Lt.push("| | 4 to 6 things from our world, spread over the wall and floor | | | | | |");
+    Lt.push("");
+    // A text map: 48 columns x 16 rows, each thing's letter at its centre.
+    var COLS = 48, ROWS = 16, grid = [];
+    for (var r = 0; r < ROWS; r++) { grid.push([]); for (var c = 0; c < COLS; c++) grid[r].push(" "); }
+    if (!outdoor) for (var c2 = 0; c2 < COLS; c2++) grid[Math.round(.62 * (ROWS - 1))][c2] = ".";
+    grid[1][Math.round(COLS / 2)] = "*";
+    things.forEach(function (t) {
+      var cx = Math.max(0, Math.min(COLS - 1, Math.round(t.x / 100 * (COLS - 1)))), cy = Math.max(0, Math.min(ROWS - 1, Math.round(t.y / 100 * (ROWS - 1))));
+      grid[cy][cx] = letter[t.id];
+    });
+    Lt.push("## Map");
+    Lt.push("Each letter is the centre of a thing from the table. " + (outdoor ? "" : "The dotted line is where the back wall meets the floor. ") + "The star is the lamp.");
+    Lt.push("");
+    Lt.push("```");
+    Lt.push("+" + new Array(COLS + 1).join("-") + "+");
+    grid.forEach(function (row) { Lt.push("|" + row.join("") + "|"); });
+    Lt.push("+" + new Array(COLS + 1).join("-") + "+");
+    Lt.push("```");
+
+    var head = "# Build pack: " + (title || "our escape room") + "\n\n" +
+      "This one message holds the four files for one game: AGENTS.md (how to build it), PLAN.md (the game, its screens, milestones and checklist), CONTENT.md (every word) and LAYOUT.md (a written screenshot of the room). Read all four before you write any code, then build it exactly. When you finish, run the playtest checklist, fix anything that fails, and tell me in plain words what to click to test it.";
+    return [head, A.join("\n"), P.join("\n"), C.join("\n"), Lt.join("\n")].join("\n\n---\n\n");
   }
 
   // ---------- where a thing is and how it looks, in words Lovable can draw from ----------
@@ -2247,11 +2382,13 @@
       }
       save(); renderRoom(); renderPanel(); renderGuide();
     }
+    else if (act === "library") openLibrary();
     else if (act === "copychange") {
       copy(changePrompt(), "Change copied. Paste it into Lovable in imagi, then play here while it updates.");
       state.sentChange = state.version; save(); renderPanel();
     }
-    else if (act === "example") openPlay(clone(EXAMPLE), "example");
+    // The example is the hand-built Alien Snack Shop page; it links back here past the title screen.
+    else if (act === "example") location.href = "alien-snack-shop-v1.html";
     else if (act === "play") openPlay(clone(g), el.dataset.who);
     else if (act === "nextver") {
       state.versions.push({ n: state.version, game: clone(g), note: clone(state.note), test: state.lastTest });
@@ -2280,6 +2417,56 @@
     }
     else if (act === "copyprompt") copyBrief();
   });
+
+  // ---------- things library picker ----------
+  // In the ten moves (move 4) a pick adds the word to the child's list; in Build it puts the thing in the room.
+  function openLibrary() {
+    var inMoves = state.step === "ask", picked = [];
+    var keys = Object.keys(LIB).sort();
+    var pop = document.createElement("div");
+    pop.className = "libpop";
+    pop.innerHTML = "<div class=\"libbox\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"libTitle\">" +
+      "<div class=\"libhead\"><h3 id=\"libTitle\">Things library</h3>" +
+      "<p>" + (inMoves ? "Tap the things you want in your room. Can't find it? Close this and type it in your own words." : "Tap a thing to put it in your room.") + "</p>" +
+      "<input type=\"search\" id=\"libSearch\" placeholder=\"Search: door, robot, cake...\" aria-label=\"Search the things library\"></div>" +
+      "<div class=\"libgrid\" id=\"libGrid\"></div>" +
+      "<div class=\"libfoot\"><p id=\"libCount\"></p><button class=\"btn\" type=\"button\" id=\"libDone\">Done</button></div></div>";
+    document.body.appendChild(pop);
+    var grid = pop.querySelector("#libGrid"), search = pop.querySelector("#libSearch");
+    var label = function (k) { return k.replace(/-/g, " "); };
+    function draw() {
+      var q = lower(search.value).trim(), html = "";
+      keys.forEach(function (k) {
+        if (q && label(k).indexOf(q) === -1) return;
+        html += "<button type=\"button\" data-k=\"" + k + "\" class=\"" + (picked.indexOf(k) !== -1 ? "on" : "") + "\">" +
+          "<img src=\"assets/things/" + k + ".webp\" alt=\"\" loading=\"lazy\"><span>" + label(k) + "</span></button>";
+      });
+      grid.innerHTML = html || "<p class=\"libempty\">Not in the library. Type it in your own words instead: a picture will be drawn for it.</p>";
+      $("libCount").textContent = inMoves ? (picked.length ? "Added: " + picked.map(label).join(", ") : "Nothing picked yet") : keys.length + " things";
+    }
+    function close() { pop.remove(); if (inMoves) focusMove(); }
+    grid.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-k]"); if (!b) return;
+      var k = b.dataset.k, name = cleanName(label(k));
+      if (inMoves) {
+        if (picked.indexOf(k) !== -1) return;
+        picked.push(k);
+        var el = $("moveIn");
+        if (el) { el.value = (el.value.trim() ? el.value.trim().replace(/,\s*$/, "") + ", " : "") + "a " + label(k); state.draft = el.value; save(); }
+        draw();
+      } else {
+        var g = G(), t = newThing(name), n = g.things.length;
+        t.x = 18 + (n * 13) % 64; t.y = WALLY.test(name) ? 26 : 66 + (n % 3) * 6;
+        g.things.push(t); state.sel = t.id; save(); close(); renderAll();
+      }
+    });
+    search.addEventListener("input", draw);
+    pop.addEventListener("click", function (e) { if (e.target === pop) close(); });
+    pop.querySelector("#libDone").addEventListener("click", close);
+    pop.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+    draw();
+    search.focus();
+  }
 
   // Copy the Lovable brief and remember it went, so the game can say "play here while it builds".
   function copyBrief() {
@@ -2622,7 +2809,8 @@
   // ---------- start ----------
   var m = location.hash.match(/^#play=(.+)$/);
   renderAll();
-  if (!m) showIntro();
+  if (location.hash === "#back") history.replaceState(null, "", location.pathname + location.search);
+  else if (!m) showIntro();
   if (m) {
     try { openPlay(decodeGame(m[1]), "shared"); }
     catch (e) { toast("That play link is broken. Ask for a new one."); }

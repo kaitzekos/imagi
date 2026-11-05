@@ -257,9 +257,17 @@
   .bar.wrong { background: #ffe0e3; }
   .bar.win { background: var(--lime); }
   [hidden] { display: none !important; }
+  /* Way back to the Escape Builder when this example was opened from it. */
+  .back {
+    position: fixed; top: 14px; right: 16px; z-index: 50; text-decoration: none; font-weight: 700; font-size: 16px;
+    color: var(--ink); background: #ffffffe6; border-radius: 999px; padding: 9px 16px; box-shadow: 0 1px 3px #0000001f, 0 4px 10px #00000014;
+  }
+  .back:hover { background: var(--lime); }
+  .back:focus-visible { outline: 3px solid var(--lilac-deep); outline-offset: 2px; }
 </style>
 </head>
 <body>
+<a class="back" href="escape-builder.html#back">← Back to the builder</a>
 <div class="wrap">
 
   <header>
