@@ -172,6 +172,8 @@
   }
   .stage-title p { margin: 0; color: var(--muted); font-weight: 700; }
   .side {
+    /* Violet text on the lilac panel needs the darker violet to pass contrast (5.2:1). */
+    --violet: var(--violet-d);
     background: linear-gradient(180deg, #ece6ff 0%, var(--lilac) 100%); border-radius: 24px;
     padding: 22px 22px 0; overflow: auto; min-height: 0;
     display: flex; flex-direction: column;
@@ -873,6 +875,8 @@
   function thingById(id) { return G().things.filter(function (t) { return t.id === id; })[0] || null; }
   function has(text, code) { return filled(code) && String(text || "").toLowerCase().indexOf(code.trim().toLowerCase()) !== -1; }
   function lower(s) { return String(s || "").toLowerCase(); }
+  // Codes match whatever the capitals, spaces or punctuation: TEAMWORK = team work = Team-Work.
+  function codeKey(s) { return lower(s).replace(/[\s.,!?;:'"()\-_]/g, ""); }
   function fmt(sec) { sec = Math.round(sec); return Math.floor(sec / 60) + ":" + ("0" + (sec % 60)).slice(-2); }
   function toast(msg) {
     var t = $("toast"); t.textContent = msg; t.hidden = false;
@@ -1300,7 +1304,7 @@
       h += "<button class=\"btn wide lime\" type=\"button\" data-act=\"copyprompt\">🪄 Copy my Lovable prompt</button>";
       h += "<label for=\"buildExpect\">While it builds: what should happen when someone types a wrong code?</label>" +
         "<textarea id=\"buildExpect\" data-expect=\"1\" placeholder=\"When someone types a wrong code...\">" + esc(state.expect) + "</textarea>";
-      h += "<details class=\"seeprompt\"><summary>See my prompt</summary><pre class=\"prompt\">" + esc(lovablePrompt(g)) + "</pre></details>";
+      h += "<details class=\"seeprompt\"><summary>See my prompt</summary><p class=\"muted\">It's long on purpose. Every one of your decisions is in it, plus exact rules, so imagi builds your game the way you planned it.</p><pre class=\"prompt\">" + esc(lovablePrompt(g)) + "</pre></details>";
       h += "<h3>Your decisions</h3>";
       h += field("Name your game", "title", "Give it a name", "text", true);
       h += "<div class=\"decisions\">";
@@ -1531,42 +1535,119 @@
   function go(step) { state.step = step; if (step !== "build") state.sel = state.step === "escape" ? state.sel : null; save(); renderAll(); }
 
   // ---------- Lovable prompt from the room ----------
+  // One long, exact build brief. imagi's builder makes far better games from a full
+  // brief (look, content, screens, rules, build order, checklist) than from a short prompt.
   function lovablePrompt(g) {
-    var ex = exitOf(g), cl = cluesOf(g);
-    var names = g.things.filter(function (t) { return !t.exit && !t.inside; }).map(function (t) { return lower(t.name); });
-    var hidden = g.things.filter(function (t) { return t.inside && thingById(t.inside); }).map(function (t) {
-      return "The " + lower(t.name) + " is hidden inside the " + lower(thingById(t.inside).name) + " and appears when the player clicks it.";
+    var B = "______", ex = exitOf(g), cl = cluesOf(g)[0];
+    // One line each; inner double quotes become single so they don't break the brief's own quotes.
+    var tidy = function (s) { return String(s).trim().replace(/\s*\n\s*/g, "; ").replace(/"/g, "'"); };
+    var stop = function (s) { return /[.!?]$/.test(s) ? s : s + "."; };
+    var andList = function (a) { return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; };
+    var exitName = ex ? lower(ex.name) : "exit";
+    var code = filled(g.code) ? g.code.trim() : B;
+    var mood = filled(g.mood) ? tidy(g.mood) : B;
+    var world = filled(g.world) ? tidy(g.world) : B;
+    var player = filled(g.player) ? tidy(g.player).replace(/[.!]+$/, "") : "classmates aged 12";
+    var open = g.things.filter(function (t) { return !t.exit && !t.inside; });
+    var hidden = g.things.filter(function (t) { return t.inside && thingById(t.inside); });
+    var thingLine = function (t) {
+      return "  - " + t.name.trim() + (t.emoji ? " " + t.emoji : "") +
+        (filled(t.say) ? ": when clicked it says \"" + tidy(t.say) + "\"" : "") +
+        (t.clue ? " (this holds the clue)" : "");
+    };
+    var clueLine = cl
+      ? "the " + lower(cl.name) + " shows \"" + tidy(cl.clueText) + "\"." + (filled(g.solution) ? " How to solve it: " + stop(tidy(g.solution)) : "")
+      : B;
+    // Ways of typing the code that must all open the lock.
+    var variants = [];
+    if (code !== B) {
+      var squash = code.replace(/\s+/g, "");
+      [code, code.toUpperCase(), code.toLowerCase(), squash.toUpperCase(), squash.toLowerCase(), " " + code + " "].forEach(function (v) {
+        var q = "\"" + v + "\"";
+        if (variants.indexOf(q) === -1) variants.push(q);
+      });
+    }
+    var wrongTry = /^\d+$/.test(code) ? (code === "999" ? "111" : "999") : (lower(code) === "banana" ? "apple" : "banana");
+    var L = [];
+    L.push("# Build brief: " + (filled(g.title) ? g.title.trim() : "our escape room"));
+    L.push("");
+    L.push("Build a one-screen escape room game for 12-year-olds, played on a school laptop. Read this whole brief before you write any code, then follow it exactly. Everything under \"Our game\" was written by the young makers: use their words as written (fix spelling only) and never swap their ideas for your own. Do not add anything this brief does not ask for.");
+    L.push("");
+    L.push("## Our game");
+    L.push("- Name: " + (filled(g.title) ? g.title.trim() : "make a short, fun name from our world"));
+    L.push("- Our world: " + world);
+    L.push("- Who will play it: " + player + ". Make the clue and the hint fair for them.");
+    L.push("- Colours and mood: " + mood);
+    L.push("- Things in the room, each one clickable:");
+    if (open.length) open.forEach(function (t) { L.push(thingLine(t)); });
+    else L.push("  - 4 to 6 things that belong in our world");
+    hidden.forEach(function (t) {
+      L.push("- Hidden: the " + lower(t.name) + " is inside the " + lower(thingById(t.inside).name) + ". It appears only after the player clicks the " + lower(thingById(t.inside).name) + ".");
     });
-    var world = (filled(g.world) ? g.world.trim() : "______") +
-      (names.length ? " Things to click: " + names.join(", ") + "." : "") +
-      (hidden.length ? " " + hidden.join(" ") : "") +
-      (ex ? " The locked exit is the " + lower(ex.name) + "." : "");
-    var clue = cl.length
-      ? cl.map(function (t) { return "The " + lower(t.name) + " says: " + t.clueText.trim().replace(/\s*\n\s*/g, "; ").replace(/[.;]?$/, "."); }).join(" ") +
-        (filled(g.solution) ? " How to solve it: " + g.solution.trim() : "")
-      : "______";
-    return "Build a one-screen escape room game for 12-year-olds on a laptop.\n\n" +
-      "MY WORLD: " + world + "\n" +
-      "MY CLUE: " + clue + "\n" +
-      "MY CODE: " + (filled(g.code) ? g.code.trim() : "______") + "\n" +
-      "MY HINT: " + (filled(g.hint) ? g.hint.trim() : "______") + "\n" +
-      "MY WRONG-CODE MESSAGE: " + (filled(g.wrong) ? g.wrong.trim() : "______") + "\n" +
-      "MY ENDING: " + (filled(g.ending) ? g.ending.trim() : "______") + "\n" +
-      "WHO WILL PLAY IT: " + (filled(g.player) ? g.player.trim().replace(/[.!]+$/, "") + ". Make the clue and hint fair for them." : "______") + "\n" +
-      "MY COLOURS AND MOOD: " + (filled(g.mood) ? g.mood.trim() : "______") + "\n\n" +
-      "How it works:\n" +
-      "1. At the top: a game name from my world and a goal line, like \"Find the clue. Open the exit.\"\n" +
-      "2. The room fills most of the screen, with 4 to 6 things to click. Each click shows a message or close-up.\n" +
-      "3. One of those things holds my clue. A first-time player can work out the code from it in about a minute.\n" +
-      "4. The exit is a locked thing from my world or ending, like a door or fridge. Put the code box and Open button on or next to it.\n" +
-      "5. A wrong or empty code keeps the exit shut. It shows a short, funny message that fits my world. Never show the code.\n" +
-      "6. The right code shows my ending.\n" +
-      "7. One message bar shows every click, wrong guess and hint.\n" +
-      "8. Big Hint and Restart buttons stay visible in a bar along the bottom.\n" +
-      "9. Hint says where to look, not the code. Restart puts everything back to the start.\n\n" +
-      "Keep it simple:\n" +
-      "- Draw everything with shapes and emoji. Big text and buttons.\n" +
-      "- No sign-in, database, saving, sounds, timer, score, image files, internet pictures or AI inside the game.";
+    L.push("- The locked exit: the " + (ex ? lower(ex.name) + (ex.emoji ? " " + ex.emoji : "") + (filled(ex.say) ? ". When clicked it says \"" + tidy(ex.say) + "\"" : "") : B));
+    L.push("- The clue: " + clueLine);
+    L.push("- The secret code: " + code);
+    L.push("- Hint button says: " + (filled(g.hint) ? "\"" + tidy(g.hint) + "\"" : "one short hint that points to where the clue is, never the code"));
+    L.push("- Wrong code message: " + (filled(g.wrong) ? "\"" + tidy(g.wrong) + "\"" : "a short, funny message that fits our world"));
+    L.push("- Empty code message: \"Nothing typed. The " + exitName + " stays locked.\"");
+    L.push("- Ending: " + (filled(g.ending) ? tidy(g.ending) : B));
+    L.push("");
+    L.push("## Look and feel");
+    L.push("Direction: the room is a real place in our world, in our colours and mood: " + stop(mood) + " It should look like a scene from a game, not a web page or a form.");
+    L.push("- Draw a back wall and a floor in our colours, with depth: light coming from one side, a soft shadow under each thing, a darker edge where wall meets floor.");
+    L.push("- Draw every thing with CSS shapes and big emoji (at least 64px). Place them around the room where they would really be: on the floor, on a shelf, on the wall. Never in a grid or a list.");
+    L.push("- Every thing reacts when the mouse is over it (a small lift or glow) and when clicked (a short wiggle), so players can tell it is clickable.");
+    L.push("- The " + exitName + " is the biggest thing in the room. It looks locked (a padlock on it) and opens with a short, happy animation when the code is right.");
+    L.push("- One bold, playful heading font that fits the mood, and easy-to-read body text of at least 18px. Strong contrast everywhere.");
+    L.push("- Buttons are big (at least 44px tall) with clear words. Never use colour as the only signal.");
+    L.push("- The whole game fits a 1366 x 768 laptop screen with no scrolling, and still works on a tablet.");
+    L.push("- Respect prefers-reduced-motion: keep everything visible and drop the movement.");
+    L.push("");
+    L.push("## The screen, top to bottom");
+    L.push("1. Top bar: the game name, and the goal line \"Find the clue. Open the " + exitName + ".\"");
+    L.push("2. The room, filling most of the screen, with the things to click. The code box and an Open button sit on or right next to the " + exitName + ".");
+    L.push("3. One message bar under the room, in big text. Every click, wrong guess and hint shows here.");
+    L.push("4. Bottom bar: big Hint and Restart buttons, always visible.");
+    L.push("When the player escapes, an ending screen covers the room: our ending, big and joyful, and a Play again button that works exactly like Restart.");
+    L.push("");
+    L.push("## Rules");
+    L.push("- Clicking a thing shows its message in the message bar. Where we didn't write one, write one or two playful sentences that fit our world.");
+    if (cl) L.push("- Clicking the " + lower(cl.name) + " opens a big, readable close-up of the clue. A Close button and the Escape key close it.");
+    if (hidden.length) L.push("- Hidden things stay hidden until the player clicks the thing they are inside.");
+    L.push("- Check the code without caring about capitals, spaces or punctuation." + (variants.length > 1 ? " " + andList(variants) + " must all open it." : ""));
+    L.push("- A wrong code keeps the " + exitName + " shut, shakes the code box and shows our wrong code message. Never show the code. Players can try again as often as they like.");
+    L.push("- An empty code keeps it shut and shows the empty code message.");
+    L.push("- The right code opens the " + exitName + " and shows the ending.");
+    L.push("- Hint shows our hint in the message bar. It never shows the code.");
+    L.push("- Restart puts everything back exactly as it was at the start: hidden things hidden, close-ups closed, code box empty, message bar cleared, exit locked, ending gone.");
+    L.push("");
+    L.push("## Keep it simple");
+    L.push("- One screen, one clue, one locked exit, one code. 60 to 90 seconds of play.");
+    L.push("- No sign-in, database, saving, sounds, timer, score, image files, internet pictures, AI inside the game, sharing buttons, external links or extra levels.");
+    L.push("- Friendly and silly, never scary or violent. Suitable for 12-year-olds.");
+    L.push("- Keep all the game's words (names, messages, clue, code, hint, ending) together in one place at the top of the code, with plain-English comments, so we can change them later.");
+    L.push("");
+    L.push("## Build in this order");
+    L.push("1. The room: wall, floor and every thing with its click message. Check every thing can be clicked.");
+    L.push("2. The clue and the lock: the close-up, the code box, the Open button and the code check. Check the right code opens it and wrong or empty codes don't.");
+    L.push("3. Hint, Restart and the ending. Check Restart after escaping puts everything back.");
+    L.push("4. The look: colours, depth, shadows, the hover and click reactions, the opening animation.");
+    L.push("");
+    L.push("## Before you say it's done");
+    L.push("Play it yourself and check every line below. Fix anything that fails, then tell me which lines passed.");
+    L.push("- Every thing in the room shows its message when clicked.");
+    if (cl) L.push("- The clue is easy to read in its close-up.");
+    if (hidden.length) L.push("- Each hidden thing appears only after clicking the thing it is inside.");
+    L.push("- " + (variants.length ? "Typing " + andList(variants) + " opens the " + exitName + "." : "The right code opens the " + exitName + "."));
+    L.push("- A wrong code such as \"" + wrongTry + "\" keeps it shut, shakes, shows our message and never shows the code.");
+    L.push("- An empty code keeps it shut.");
+    L.push("- The hint never contains the code.");
+    L.push("- Restart after escaping puts everything back, and the game plays the same the second time.");
+    L.push("- Nothing from \"Keep it simple\" was added.");
+    L.push("- No errors in the browser console.");
+    L.push("");
+    L.push("When you finish, tell me in plain words what to click to test it.");
+    return L.join("\n");
   }
 
   // ---------- prompt coach ----------
@@ -1898,7 +1979,7 @@
     var g = P.game, ex = exitOf(g), typed = $("pCode").value.trim();
     $("pClose").hidden = true;
     if (!typed) { log("empty"); replay($("pLock"), "shake"); say("Nothing typed. The " + lower(ex.name) + " stays locked.", "wrong"); return; }
-    if (lower(typed) !== lower((g.code || "").trim()) || !filled(g.code)) {
+    if (codeKey(typed) !== codeKey(g.code) || !filled(g.code)) {
       log("wrong", typed);
       replay($("pLock"), "shake");
       say(filled(g.wrong) ? g.wrong : "Wrong code. The " + lower(ex.name) + " stays locked.", "wrong");

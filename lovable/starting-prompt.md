@@ -1,15 +1,15 @@
 # Starting prompt
 
-Status: drafted, not yet sent to Lovable. Revised 2026-10-26: fifth blank and layout lines, approved by Kai. Test it with two different worlds before any child uses it.
+Status: revised 2026-11-05 to a full build brief. In imagi, Kai found that short prompts built plain games and full design packs (the nine game ZIPs) built much better ones. The children still fill the same five blanks; everything else is written for them. Not yet sent to imagi in this form. Test it with two different worlds before any child uses it.
 
-## Before the prompt: the idea card (2 minutes, no laptop)
+## Before the prompt: the idea card (3 minutes, no laptop)
 
 Each partner fills at least one line. Say it, write it or sketch it.
 
 | | Your idea |
 |---|---|
 | My world: one place with one strange detail (and a name, if you like) | |
-| My clue: where the secret code is hidden | |
+| My clue: where the secret code is hidden, and what the player reads there | |
 | My code: 3 numbers or one word | |
 | My ending: what happens when someone escapes | |
 | My colours and mood: two or three colours and how it should feel | |
@@ -22,67 +22,118 @@ Questions the facilitator can ask, one at a time and only if a pair is stuck:
 
 ## The prompt children copy
 
-Partner A copies everything in the box, fills the five blanks from the idea card, and sends it.
+Partner A copies everything in the box, fills the five blanks under "Our game" from the idea card, and sends it as one message. It is long on purpose: imagi builds a far better game from an exact brief.
 
 ```text
-Build a one-screen escape room game for 12-year-olds on a laptop.
+# Build brief: our escape room
 
-MY WORLD: ______
-MY CLUE: ______
-MY CODE: ______
-MY ENDING: ______
-MY COLOURS AND MOOD: ______
+Build a one-screen escape room game for 12-year-olds, played on a school laptop. Read this whole brief before you write any code, then follow it exactly. Everything under "Our game" was written by the young makers: use their words as written (fix spelling only) and never swap their ideas for your own. Do not add anything this brief does not ask for.
 
-How it works:
-1. At the top: a game name from my world and a goal line, like "Find the clue. Open the exit."
-2. The room fills most of the screen, with 4 to 6 things to click. Each click shows a message or close-up.
-3. One of those things holds my clue. A first-time player can work out the code from it in about a minute.
-4. The exit is a locked thing from my world or ending, like a door or fridge. Put the code box and Open button on or next to it.
-5. A wrong or empty code keeps the exit shut. It shows a short, funny message that fits my world. Never show the code.
-6. The right code shows my ending.
-7. One message bar shows every click, wrong guess and hint.
-8. Big Hint and Restart buttons stay visible in a bar along the bottom.
-9. Hint says where to look, not the code. Restart puts everything back to the start.
+## Our game
+- Our world: ______
+- The clue (where the code is hidden, and what the player reads there): ______
+- The secret code: ______
+- Ending (what happens when someone escapes): ______
+- Colours and mood: ______
+- Name: make a short, fun name from our world.
+- Things in the room: 4 to 6 things that belong in our world. One of them holds the clue. The locked exit is another thing from our world, like a door, a chest or a fridge.
+- Hint button says: one short hint that points to where the clue is, never the code.
+- Wrong code message: a short, funny message that fits our world.
+- Empty code message: "Nothing typed. It stays locked."
 
-Keep it simple:
-- Draw everything with shapes and emoji. Big text and buttons.
-- No sign-in, database, saving, sounds, timer, score, image files, internet pictures or AI inside the game.
+## Look and feel
+Direction: the room is a real place in our world, in our colours and mood. It should look like a scene from a game, not a web page or a form.
+- Draw a back wall and a floor in our colours, with depth: light coming from one side, a soft shadow under each thing, a darker edge where wall meets floor.
+- Draw every thing with CSS shapes and big emoji (at least 64px). Place them around the room where they would really be: on the floor, on a shelf, on the wall. Never in a grid or a list.
+- Every thing reacts when the mouse is over it (a small lift or glow) and when clicked (a short wiggle), so players can tell it is clickable.
+- The locked exit is the biggest thing in the room. It looks locked (a padlock on it) and opens with a short, happy animation when the code is right.
+- One bold, playful heading font that fits the mood, and easy-to-read body text of at least 18px. Strong contrast everywhere.
+- Buttons are big (at least 44px tall) with clear words. Never use colour as the only signal.
+- The whole game fits a 1366 x 768 laptop screen with no scrolling, and still works on a tablet.
+- Respect prefers-reduced-motion: keep everything visible and drop the movement.
+
+## The screen, top to bottom
+1. Top bar: the game name, and a goal line like "Find the clue. Open the door."
+2. The room, filling most of the screen, with the things to click. The code box and an Open button sit on or right next to the locked exit.
+3. One message bar under the room, in big text. Every click, wrong guess and hint shows here.
+4. Bottom bar: big Hint and Restart buttons, always visible.
+When the player escapes, an ending screen covers the room: our ending, big and joyful, and a Play again button that works exactly like Restart.
+
+## Rules
+- Clicking a thing shows one or two playful sentences in the message bar that fit our world.
+- Clicking the thing that holds the clue opens a big, readable close-up of the clue. A Close button and the Escape key close it.
+- A first-time player can work out the code from the clue in about a minute.
+- Check the code without caring about capitals, spaces or punctuation. For example, TEAMWORK, teamwork and team work all open a lock whose code is "team work".
+- A wrong code keeps the exit shut, shakes the code box and shows the wrong code message. Never show the code. Players can try again as often as they like.
+- An empty code keeps it shut and shows the empty code message.
+- The right code opens the exit and shows the ending.
+- Hint shows the hint in the message bar. It never shows the code.
+- Restart puts everything back exactly as it was at the start: close-ups closed, code box empty, message bar cleared, exit locked, ending gone.
+
+## Keep it simple
+- One screen, one clue, one locked exit, one code. 60 to 90 seconds of play.
+- No sign-in, database, saving, sounds, timer, score, image files, internet pictures, AI inside the game, sharing buttons, external links or extra levels.
+- Friendly and silly, never scary or violent. Suitable for 12-year-olds.
+- Keep all the game's words (names, messages, clue, code, hint, ending) together in one place at the top of the code, with plain-English comments, so we can change them later.
+
+## Build in this order
+1. The room: wall, floor and every thing with its click message. Check every thing can be clicked.
+2. The clue and the lock: the close-up, the code box, the Open button and the code check. Check the right code opens it and wrong or empty codes don't.
+3. Hint, Restart and the ending. Check Restart after escaping puts everything back.
+4. The look: colours, depth, shadows, the hover and click reactions, the opening animation.
+
+## Before you say it's done
+Play it yourself and check every line below. Fix anything that fails, then tell me which lines passed.
+- Every thing in the room shows its message when clicked.
+- The clue is easy to read in its close-up.
+- The code opens the exit typed in capitals, in small letters, and with or without spaces.
+- A wrong code keeps it shut, shakes, shows the wrong code message and never shows the code.
+- An empty code keeps it shut.
+- The hint never contains the code.
+- Restart after escaping puts everything back, and the game plays the same the second time.
+- Nothing from "Keep it simple" was added.
+- No errors in the browser console.
+
+When you finish, tell me in plain words what to click to test it.
 ```
 
-While Lovable builds, each child writes one prediction: "When I type the wrong code, I think the game will ______."
+While it builds, each child writes one prediction: "When I type the wrong code, I think the game will ______."
 
 ## Short version (if children must type the prompt)
 
-Use only if copying from a shared document doesn't work on the student route.
+Use only if copying from a shared document doesn't work on the student route. Expect a plainer game.
 
 ```text
 Escape room game on one screen. World: ______. Clue: ______. Code: ______. Ending: ______. Colours and mood: ______.
-Name and goal at the top. Room fills the screen, with things to click. Locked exit from my world, with a code box. One message bar. Wrong or empty code stays shut, never shows the code. Hint points to the clue. Big Hint and Restart buttons along the bottom. Shapes and emoji art. No sign-in, saving or internet pictures.
+Name and goal at the top. Room fills the screen, with things to click. Locked exit from my world, with a code box. One message bar. Wrong or empty code stays shut, never shows the code. Code check ignores capitals and spaces. Hint points to the clue. Big Hint and Restart buttons along the bottom. Shapes and emoji art. No sign-in, saving or internet pictures.
 ```
 
-## Why each line is there
+## Why each part is there
 
-| Line | Reason |
+| Part | Reason |
 |---|---|
-| Five blanks only | The child's idea and look go in before any AI suggestion; no spec form before play |
-| MY COLOURS AND MOOD | The look is the child's choice, not Imaginable's brand. Without it Lovable picks a generic look |
+| Five blanks only, all under "Our game" | The child's idea and look go in before any AI suggestion; no spec form before play |
+| A long brief instead of nine lines | In imagi, short prompts built plain games; the full ZIP packs (look, content, screens, rules, build order, checklist) built much better ones |
+| "Use their words as written" | Stops the builder replacing the child's idea with its own |
+| Colours and mood, plus a "Direction" for the look | The look is the child's choice. Without a concrete direction the builder picks a generic layout |
 | "for 12-year-olds" | Keeps content and reading level suitable |
 | Name and goal line at the top | The player knows what game this is and what to do in the first seconds |
-| Name comes from MY WORLD | No sixth blank. A child who has a name writes it in MY WORLD; otherwise Lovable makes one from the world, and the child can rename it later in their own words |
-| Room fills most of the screen, 4 to 6 things to click | A place to explore, not a form with one button; still finishable in a minute |
+| Room drawn with depth, things placed where they'd really be | A place to explore, not a form with one button; still finishable in a minute |
 | Shapes and emoji, no image files | "Simple built-in art" (reference/assignment.md line 12); no internet or generated images |
 | Exit is a locked thing from the world, code box on or next to it | The lock is part of the story, so solving it feels like escaping, not filling in a box |
+| Code check ignores capitals, spaces and punctuation | Candy Factory rejected "teamwork" when the code was "TEAM WORK" (found by Tomer) |
 | Wrong or empty code, never show the code | The fairness rule children test later (right, wrong, empty) |
 | One message bar | Every response lands in one place the player and the watching creators can see |
 | Hint points to the clue | Sets up the teaching moment: should a hint reveal or guide? |
 | Hint and Restart always visible along the bottom | Easy to find when stuck and on the ending; Restart is also the side-effect test after every change |
-| No sign-in, database, saving, internet pictures, AI | Out of scope for the class; Lovable tends to add these unasked |
+| Build order and "Before you say it's done" | The ZIP packs' milestones and checklist made the builder test its own work. "Done" from the builder is still only a claim until the child plays it |
+| No sign-in, database, saving, sounds, sharing, AI | Out of scope for the class; builders add these unasked (the ZIP games added sound, sharing and printing) |
 | No timer or score | Leaves those as choices children can add in Version 2 with a Change prompt |
 
 ## What playtester must test for this prompt
 
-Full path on two worlds: every object click, clue visible, wrong code, empty code, Hint, right code, ending, Restart, play again.
+Full path on two worlds: every object click, clue visible, wrong code, empty code, the code in capitals, small letters and with a space, Hint, right code, ending, Restart, play again.
 
-Layout on both worlds: name and goal line at the top; room fills most of the screen; the exit is a thing from the world with the code box on or next to it; every click, wrong guess and hint message shows in the one bar; Hint and Restart visible on every screen, including the ending; colours and mood match the blank; no image files.
+Layout on both worlds: name and goal line at the top; room fills most of the screen with depth; the exit is a thing from the world with the code box on or next to it; every click, wrong guess and hint message shows in the one bar; Hint and Restart visible on every screen, including the ending; colours and mood match the blank; no image files.
 
-Also check that Lovable added nothing from the "No" list.
+Also record the build time and credits used, compared with the short version, and check that the builder added nothing from "Keep it simple".
