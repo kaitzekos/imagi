@@ -237,12 +237,12 @@
     display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px #211b2b26;
   }
 
-  /* ---------- room editor: flip, rotate, layers, blend, handles, grid ---------- */
-  /* Pictures face the viewer. Turning swivels them left or right like a real object (3D, eased);
-     "turn around" swivels 180 degrees; the tilt handle leans them. The name tag stays readable. */
+  /* ---------- room editor: tilt, flip, layers, handles, grid ---------- */
+  /* Pictures are flat and face the viewer, so they tilt (lean) and flip (mirror), but never swivel in 3D.
+     The flip squeezes through the middle, so the child sees it happen. The name tag stays readable. */
   .thing .emo {
-    transform: perspective(700px) rotateY(var(--turn, 0deg)) rotate(var(--rot, 0deg));
-    transition: transform .6s cubic-bezier(.45, .05, .25, 1);
+    transform: rotate(var(--rot, 0deg)) scaleX(var(--flip, 1));
+    transition: transform .45s cubic-bezier(.45, .05, .25, 1);
   }
   .thing.dragging .emo { transition: none; }
   /* Hung on the wall: framed things hang from a nail on a string; paper is taped up. */
@@ -266,14 +266,6 @@
   }
   /* A window, vent or fireplace: a square opening with a sill line. */
   .thing.inwall.square .emo::before { left: 10%; right: 10%; top: 12%; bottom: 12%; border-radius: 6%; }
-  .thing.inwall .emo .tint { opacity: .6; }
-  /* Blend in: the room's wall colour washes over the picture (masked to its shape), so it sits in the room. */
-  .thing .emo .tint {
-    position: absolute; left: 4px; top: 4px; width: 1.3em; height: 1.3em; pointer-events: none;
-    background: var(--tint, transparent); mix-blend-mode: multiply; opacity: .45;
-    -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat;
-  }
-  .room.dark .thing .emo .tint { mix-blend-mode: soft-light; opacity: .7; }
   .thing .h {
     position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--violet); color: var(--white);
     border: 3px solid var(--white); box-shadow: 0 2px 8px #211b2b40; font-size: 15px; font-weight: 700;
@@ -288,6 +280,7 @@
   }
   .edit-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .edit-tools .btn { padding: 8px 12px; font-size: 14px; }
+  .edit-tools .btn[hidden] { display: none; }
   .edit-tools .btn.on { background: var(--violet); color: var(--white); box-shadow: none; }
   .restart-btn {
     border: 0; border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 700;
@@ -379,10 +372,12 @@
     box-shadow: 0 1px 3px #211b2b14;
   }
   .palette button:hover { background: var(--lilac-2); box-shadow: inset 0 0 0 2px var(--lilac-line); }
+  .palette button img { display: block; width: 36px; height: 36px; margin: 0 auto; object-fit: contain; pointer-events: none; }
   .card { background: var(--white); border-radius: 18px; padding: 12px 14px; margin-top: 14px; box-shadow: var(--shadow-s); }
   .card.sel { box-shadow: inset 0 0 0 2px var(--violet), var(--shadow-s); }
   .card-head { display: flex; align-items: center; gap: 10px; }
   .card-head .big { font-size: 34px; }
+  .card-head .big img { display: block; width: 42px; height: 42px; object-fit: contain; }
   .toggle { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-top: 10px; }
   .toggle input { width: 22px; height: 22px; accent-color: var(--violet); }
   input[type=range] { width: 100%; accent-color: var(--violet); }
@@ -662,6 +657,7 @@
       </ol>
       <div class="intro-go">
         <button class="btn go" type="button" id="introStart">Start building</button>
+        <a class="link" href="alien-snack-shop-v1.html" id="introExample">Play an example first</a>
         <button class="link" type="button" id="introNew" hidden>Start a new one</button>
       </div>
     </div>
@@ -780,13 +776,21 @@
               deco: "repeating-linear-gradient(90deg, transparent 0 38px, #ffffff55 38px 52px)" }
   };
 
+  // The things box: each button is a library picture with its library name, so what the child adds
+  // is called what it looks like, and the Lovable brief uses the same word. The emoji is only a fallback.
   var PALETTE = {
-    "Exits":     ["🚪", "📦", "🧰", "🎁", "🗄️", "🧊", "🏰", "⛺", "🛸", "🪤", "🗝️", "🔐"],
-    "Furniture": ["🪑", "🛋️", "🛏️", "🪞", "🖼️", "🕰️", "🪟", "🧸", "🪴", "🛁", "📺", "🎹"],
-    "Things":    ["🧾", "📜", "📕", "📷", "☎️", "🔦", "💡", "🧪", "🕯️", "⚽", "🎩", "🧦"],
-    "Creatures": ["👽", "👾", "🐙", "🐱", "🐶", "🦉", "🐉", "🤖", "👻", "🧙", "🦖", "🐸"],
-    "Food":      ["🍪", "🍩", "🍕", "🍰", "🧁", "🍫", "🍉", "🥤", "🍔", "🍦", "🥕", "🧀"],
-    "Nature":    ["🌙", "⭐", "🪐", "🚀", "🌋", "🌳", "🌵", "🌊", "❄️", "🔥", "🌈", "🍄"]
+    "Exits":     [["🚪", "Door"], ["📦", "Box"], ["🧰", "Toolbox"], ["🎁", "Present"], ["🗄️", "Cabinet"], ["🧊", "Fridge"],
+                  ["🏰", "Castle"], ["⛺", "Tent"], ["🛸", "UFO"], ["🪤", "Trap"], ["🧳", "Chest"], ["🔐", "Safe"]],
+    "Furniture": [["🪑", "Chair"], ["🛋️", "Sofa"], ["🛏️", "Bed"], ["🪞", "Mirror"], ["🖼️", "Painting"], ["🕰️", "Clock"],
+                  ["🪟", "Window"], ["🧸", "Teddy bear"], ["🪴", "Plant"], ["🛁", "Bathtub"], ["📺", "Television"], ["🎹", "Piano"]],
+    "Things":    [["🧾", "Receipt"], ["📜", "Scroll"], ["📕", "Book"], ["📷", "Camera"], ["☎️", "Phone"], ["🔦", "Flashlight"],
+                  ["💡", "Light"], ["🧪", "Potion"], ["🕯️", "Candle"], ["⚽", "Ball"], ["🗝️", "Key"], ["🧦", "Sock"]],
+    "Creatures": [["👽", "Alien"], ["👾", "Monster"], ["🐙", "Octopus"], ["🐱", "Cat"], ["🐶", "Dog"], ["🦉", "Owl"],
+                  ["🐉", "Dragon"], ["🤖", "Robot"], ["👻", "Ghost"], ["🧙", "Wizard"], ["🦖", "Dinosaur"], ["🐸", "Frog"]],
+    "Food":      [["🍪", "Cookie"], ["🍩", "Donut"], ["🍕", "Pizza"], ["🍰", "Cake"], ["🧁", "Cupcake"], ["🍫", "Chocolate"],
+                  ["🍎", "Apple"], ["🥤", "Soda"], ["🍔", "Burger"], ["🍭", "Lollipop"], ["🥕", "Carrot"], ["🧀", "Cheese"]],
+    "Nature":    [["🌙", "Moon"], ["⭐", "Star"], ["🪐", "Planet"], ["🚀", "Rocket"], ["🌋", "Volcano"], ["🌳", "Tree"],
+                  ["🌵", "Cactus"], ["🌊", "Wave"], ["⛄", "Snowman"], ["🔥", "Fire"], ["🌈", "Rainbow"], ["🍄", "Mushroom"]]
   };
 
   var STEPS = [
@@ -971,9 +975,40 @@
       var im = new Image();
       im.onload = function () { a.st = "ok"; a.cbs.forEach(function (f) { f(); }); a.cbs = []; };
       im.onerror = function () { a.st = "fail"; a.cbs = []; };
-      im.src = url;
+      im.src = url; a.im = im;
     }
     if (a.st === "ok") cb(); else if (a.st === "loading") a.cbs.push(cb);
+  }
+  // Most pictures face the viewer and look the same mirrored, so Flip would seem to do nothing.
+  // Compare the picture with its mirror image; offer Flip only when the difference is easy to see.
+  function flipShows(url) {
+    var a = url && ART[url];
+    if (!a || a.st !== "ok") return !url;
+    if (a.mirror == null) {
+      try {
+        var n = 48, c = document.createElement("canvas"); c.width = c.height = n;
+        var x = c.getContext("2d"); x.drawImage(a.im, 0, 0, n, n);
+        var d = x.getImageData(0, 0, n, n).data, diff = 0, ink = 0;
+        for (var y = 0; y < n; y++) for (var i = 0; i < n / 2; i++) {
+          var p = (y * n + i) * 4, q = (y * n + n - 1 - i) * 4, wp = d[p + 3] / 255, wq = d[q + 3] / 255;
+          diff += (Math.abs(d[p] * wp - d[q] * wq) + Math.abs(d[p + 1] * wp - d[q + 1] * wq) + Math.abs(d[p + 2] * wp - d[q + 2] * wq)) / 765 + Math.abs(wp - wq);
+          ink += Math.max(wp, wq);
+        }
+        a.mirror = diff / Math.max(ink, 1) > 0.35;
+      } catch (e) { a.mirror = true; }
+    }
+    return a.mirror;
+  }
+  // The picture a thing shows right now: the exact one once it has loaded, otherwise the library stand-in.
+  function shownArt(t) { return t.art && ART[t.art] && ART[t.art].st === "ok" ? t.art : (t.base || t.art || ""); }
+  // A small icon for the card: a picture already loaded or a library one, never a new AI request per keystroke.
+  function iconHtml(t) {
+    var src = t.art && ART[t.art] && ART[t.art].st === "ok" ? t.art : /^\/api\//.test(t.art || "") ? (t.base || "") : (t.art || t.base || "");
+    return src ? "<img src=\"" + esc(src) + "\" alt=\"\">" : esc(t.emoji);
+  }
+  function syncFlip(t) {
+    var b = document.querySelector("#panel [data-act=flip][data-id=\"" + t.id + "\"]");
+    if (b) b.hidden = !t.flip && !flipShows(shownArt(t));
   }
 
   // ---------- words -> emoji (shown while a picture loads, or instead of one) ----------
@@ -1443,13 +1478,22 @@
   var INWALL_RE = /[^a-z](doors?|windows?|gates?|vents?|fireplaces?|curtains?|archway|portal|hatch)[^a-z]/;
   var NAIL_RE = /[^a-z](paintings?|pictures?|posters?|frames?|portraits?|clocks?|signs?|maps?|calendars?|mirrors?|flags?|boards?|whiteboard|blackboard|chalkboard|photos?|tv|television|screens?)[^a-z]/;
   var TAPE_RE = /[^a-z](notes?|letters?|papers?|receipts?|tickets?|envelopes?|newspapers?|cards?|drawings?|post-?its?|sticky)[^a-z]/;
-  // Turn, tilt and blend, shared by the builder and the player.
-  function applyLook(el, t, g) {
+  // Tilt and flip, shared by the builder and the player.
+  function applyLook(el, t) {
     var emo = el.querySelector(".emo"); if (!emo) return;
-    emo.style.setProperty("--turn", ((t.turn || 0) + (t.flip ? 180 : 0)) + "deg");
+    emo.style.setProperty("--flip", t.flip ? -1 : 1);
     emo.style.setProperty("--rot", (t.rot || 0) + "deg");
-    var th = THEMES[(g || G()).theme] || THEMES.lilac;
-    emo.style.setProperty("--tint", t.blend === false ? "transparent" : th.wall);
+  }
+  // The room is redrawn after each change, so replay the tilt or flip on the new picture: the child sees it move.
+  function animateLook(t, from) {
+    var emo = document.querySelector("#room .thing[data-id=\"" + t.id + "\"] .emo"); if (!emo) return;
+    emo.style.transition = "none";
+    emo.style.setProperty("--flip", from.flip ? -1 : 1);
+    emo.style.setProperty("--rot", (from.rot || 0) + "deg");
+    void emo.offsetWidth;
+    emo.style.transition = "";
+    emo.style.setProperty("--flip", t.flip ? -1 : 1);
+    emo.style.setProperty("--rot", (t.rot || 0) + "deg");
   }
 
   function thingEl(t, mode) {
@@ -1471,17 +1515,14 @@
       var img = document.createElement("img");
       img.className = "art"; img.alt = ""; img.src = src;
       emo.textContent = ""; emo.appendChild(img);
-      // The tint layer takes the picture's own shape, so only the object changes colour.
-      var tint = document.createElement("span");
-      tint.className = "tint"; tint.style.setProperty("--mask", "url(\"" + src + "\")");
-      emo.appendChild(tint);
+      if (mode === "build" && state.sel === t.id) syncFlip(t);
     };
     if (t.base && t.base !== t.art) whenArt(t.base, function () { put(t.base, 1); });
     if (t.art) whenArt(t.art, function () { put(t.art, 2); });
     b.appendChild(emo);
     applyDepth(b, t);
-    applyLook(b, t, mode === "play" && P ? P.game : null);
-    // The selected thing gets handles in the Build step: drag ⤡ to resize, ⟳ to turn.
+    applyLook(b, t);
+    // The selected thing gets handles in the Build step: drag ⤡ to resize, ⟳ to tilt.
     if (mode === "build" && state.step === "build" && state.sel === t.id) {
       b.insertAdjacentHTML("beforeend", "<span class=\"h h-size\" data-h=\"size\" title=\"Drag to resize\">⤡</span><span class=\"h h-rot\" data-h=\"rot\" title=\"Drag to tilt\">⟳</span>");
     }
@@ -1538,7 +1579,7 @@
       ? "🪄 This is a quick sketch of your plan. Your real game, built in Lovable, will look and play much better. Go build it there!"
       : state.step === "ask" ? (g.things.length ? "Your room builds as you answer. Drag things to move them. 🔒 = exit, 🔎 = clue." : "")
       : state.step === "build"
-      ? "Drag to move. Pick a thing, then drag ⤡ to resize and ⟳ to turn. 🔒 = exit, 🔎 = holds a clue."
+      ? "Drag to move. Pick a thing, then drag ⤡ to resize and ⟳ to tilt. 🔒 = exit, 🔎 = holds a clue."
       : state.step === "escape"
       ? "Drag things to move them. Click a thing to change it. 🔒 = exit, 🔎 = holds a clue."
       : "";
@@ -1659,7 +1700,7 @@
 
   function thingCard(t, detail) {
     var h = "<div class=\"card sel\">" +
-      "<div class=\"card-head\"><span class=\"big\">" + esc(t.emoji) + "</span>" +
+      "<div class=\"card-head\"><span class=\"big\">" + iconHtml(t) + "</span>" +
       "<input type=\"text\" data-tk=\"name\" data-id=\"" + t.id + "\" value=\"" + esc(t.name) + "\" aria-label=\"Name\"></div>" +
       "<label>When someone clicks it, it says</label>" +
       "<textarea data-tk=\"say\" data-id=\"" + t.id + "\" placeholder=\"Something short. Funny is good.\">" + esc(t.say) + "</textarea>" +
@@ -1685,9 +1726,10 @@
         (on != null ? " aria-pressed=\"" + !!on + "\"" : "") + ">" + label + "</button>";
     };
     h += "<label>Move and shape it</label><div class=\"edit-tools\">" +
-      tb("rotl", "↶ Turn left") + tb("rotr", "↷ Turn right") + tb("flip", "↻ Turn around", !!t.flip) +
+      tb("rotl", "↶ Tilt left") + tb("rotr", "↷ Tilt right") +
+      tb("flip", "↔ Flip", !!t.flip).replace("<button", "<button" + (!t.flip && !flipShows(shownArt(t)) ? " hidden" : "")) +
       tb("tofront", "⬆ To front") + tb("toback", "⬇ To back") + tb("dup", "⧉ Copy") +
-      tb("floor", "On the floor") + tb("wall", "On the wall") + tb("blend", "🎨 Blend in", t.blend !== false) + "</div>";
+      tb("floor", "On the floor") + tb("wall", "On the wall") + "</div>";
     h += "<div class=\"row\" style=\"margin-top:12px\"><button class=\"btn danger small\" type=\"button\" data-act=\"del\" data-id=\"" + t.id + "\">Remove</button></div></div>";
     return h;
   }
@@ -1832,8 +1874,10 @@
         h += "<button type=\"button\" class=\"" + (state.tab === k ? "on" : "") + "\" data-act=\"tab\" data-tab=\"" + k + "\">" + k + "</button>";
       });
       h += "</div><div class=\"palette\">";
-      PALETTE[state.tab].forEach(function (e) {
-        h += "<button type=\"button\" data-act=\"add\" data-emoji=\"" + e + "\" aria-label=\"Add " + e + "\">" + e + "</button>";
+      PALETTE[state.tab].forEach(function (p) {
+        var k = libKey(p[1]);
+        h += "<button type=\"button\" data-act=\"add\" data-emoji=\"" + p[0] + "\" data-name=\"" + esc(p[1]) + "\" title=\"" + esc(p[1]) + "\" aria-label=\"Add " + esc(lower(p[1])) + "\">" +
+          (k ? "<img src=\"assets/things/" + k + ".webp\" alt=\"\">" : p[0]) + "</button>";
       });
       h += "</div>";
       var t = thingById(state.sel);
@@ -1999,10 +2043,8 @@
       var k = libKey(t.name), w = [];
       w.push(k && LIB[k] ? "a chunky clay-toy " + lower(t.name) + ", mostly " + LIB[k] : "a chunky clay-toy " + lower(t.name) + " in its natural colours");
       w.push("seen straight from the front");
-      if (t.flip) w.push("turned around (mirrored) to face the other way");
-      if (t.turn) w.push("swivelled " + Math.abs(t.turn) + " degrees to the " + (t.turn > 0 ? "right" : "left") + " (a 3D turn, so it looks narrower)");
+      if (t.flip) w.push("flipped (mirrored) to face the other way");
       if (t.rot) w.push("tilted " + Math.abs(t.rot) + " degrees " + (t.rot > 0 ? "clockwise" : "anticlockwise"));
-      if (t.blend !== false) w.push("lightly tinted with the wall colour so it sits in the room");
       return w.join(", ");
     };
     var A = [], P = [], C = [], Lt = [];
@@ -2014,7 +2056,10 @@
     A.push("");
     A.push("## Stack");
     A.push("- Use the project's existing setup. One page, one route.");
-    A.push("- No network requests, no external images, no image files. Draw everything with CSS shapes, gradients, shadows and big emoji.");
+    A.push("- No network requests, no external images, no image files.");
+    A.push("- The room's background is the exact SVG code in LAYOUT.md. Paste it as it is; don't redraw or simplify it.");
+    A.push("- Draw every thing in the room as its own inline SVG illustration (a component per thing), following its description in LAYOUT.md. Use an emoji only if a thing really can't be drawn.");
+    A.push("- Never put a thing inside a card, tile, box, bubble, button-shaped frame, border or frosted-glass panel. Each thing stands directly in the room with only its own shadow, like an object in a real room.");
     A.push("- One playful, rounded heading font is fine; body text uses a clear sans-serif.");
     A.push("- No cookies, accounts, analytics or data collection.");
     A.push("");
@@ -2030,8 +2075,12 @@
     A.push("## Look and feel");
     A.push("- Direction: the room is a real place in our world, in our colours and mood: " + stop(mood) + " It should look like a scene from a game, not a web page or a form.");
     A.push("- Recreate the room in LAYOUT.md as closely as you can: same wall and floor colours, same shape of room, same position, size, layer, facing and tilt for every thing. Aim for a 90% match with the makers' sketch.");
-    A.push("- Every thing is drawn as a chunky, soft clay-toy object (rounded shapes, gentle highlight from the top-left, soft shadow), built from its emoji plus CSS shapes so it matches the description in LAYOUT.md.");
-    A.push("- Every thing reacts when the mouse is over it (lifts 4px with a stronger shadow) and when clicked (a short wiggle), so players can tell it is clickable.");
+    A.push("- Clay-toy style for every SVG thing: chunky rounded shapes; flat base colours from its description; one lighter highlight shape on the top-left; one darker shade shape on the bottom-right; a 2 to 3 px outline in a darker shade of the same colour; no thin lines, no tiny details. Friendly faces only on creatures.");
+    A.push("- Shadows: every thing on the floor sits on a soft oval contact shadow under its base (a radial gradient from rgba(0,0,0,.35) to transparent). Things on the wall get a small shadow on the wall (filter: drop-shadow(3px 6px 4px rgba(0,0,0,.25))). Things that hang show their nail and string, or their tape, as part of the drawing.");
+    A.push("- Sizes are real: draw each thing at the width given in LAYOUT.md (pixels for a 1280 px wide room; scale with the room). Big things are big; the locked exit is usually the biggest.");
+    A.push("- The locked exit looks like the real thing (a door has a frame, panels, a handle) with a padlock on it. Its code box and Open button sit in a small rounded panel just under it, inside the room.");
+    A.push("- The page around the room is light and calm (white or a very pale tint of the wall colour). The top bar and the bottom bar use the room's colours.");
+    A.push("- Every thing reacts when the mouse is over it (lifts 4px with a stronger shadow) and when clicked (a short wiggle), so players can tell it is clickable. No hover background, no tile.");
     A.push("- Turning and opening are smooth: ease-in-out, about 0.6 seconds.");
     A.push("- Big text (at least 18px) and big buttons (at least 44px tall), strong contrast. Never use colour as the only signal.");
     A.push("- The whole game fits a 1366 x 768 laptop screen with no scrolling, and still works on a tablet.");
@@ -2139,6 +2188,18 @@
     }
     if (th.dark) Lt.push("- It is a dark room: use light text on dark surfaces and keep everything readable.");
     Lt.push("");
+    // The room exactly as the makers saw it: the builder's own backdrop, as code.
+    Lt.push("## The room background, as code");
+    Lt.push("Use this exactly. Give the room box this CSS background, then put this SVG inside it as the first layer, stretched to fill the box (position absolute, inset 0, width and height 100%). The things go on top.");
+    Lt.push("");
+    Lt.push("```css");
+    Lt.push(".room { position: relative; overflow: hidden; border-radius: 24px; aspect-ratio: 16 / 9; background: " + th.deco + ", " + th.wall + "; }");
+    Lt.push("```");
+    Lt.push("");
+    Lt.push("```html");
+    Lt.push(roomBackdrop(g).replace(/class="roombg"/, "class=\"room-bg\" style=\"position:absolute;inset:0;width:100%;height:100%;pointer-events:none\""));
+    Lt.push("```");
+    Lt.push("");
     Lt.push("## Every thing, back to front");
     Lt.push("Draw them in this order, so later rows sit in front of earlier ones.");
     Lt.push("");
@@ -2146,7 +2207,7 @@
     Lt.push("|---|---|---|---|---|---|---|");
     things.forEach(function (t) {
       Lt.push("| " + letter[t.id] + " | " + t.name.trim() + (t.emoji ? " " + t.emoji : "") + (t.exit ? " (locked exit, with a padlock badge and the code box beside it)" : "") + (t.clue ? " (holds the clue)" : "") +
-        " | " + Math.round(t.x) + "% | " + Math.round(t.y) + "% | " + widthPct(t) + "% | " + mount(t) + " | " + looks(t) + " |");
+        " | " + Math.round(t.x) + "% | " + Math.round(t.y) + "% | " + widthPct(t) + "% (about " + Math.round(widthPct(t) * 12.8) + " px) | " + mount(t) + " | " + looks(t) + " |");
     });
     if (!things.length) Lt.push("| | 4 to 6 things from our world, spread over the wall and floor | | | | | |");
     Lt.push("");
@@ -2182,8 +2243,7 @@
     var k = libKey(t.name), w = [];
     w.push(t.size < 60 ? "small" : t.size > 110 ? "big" : "medium-sized");
     if (k && LIB[k]) w.push("drawn like a chunky clay toy, mostly " + LIB[k]);
-    if (t.flip) w.push("turned around to face the other way");
-    if (t.turn) w.push("turned " + Math.abs(t.turn) + " degrees to the " + (t.turn > 0 ? "right" : "left") + ", so we see it from the side a little");
+    if (t.flip) w.push("flipped to face the other way");
     if (t.rot) w.push("tilted " + Math.abs(t.rot) + " degrees to the " + (t.rot > 0 ? "right" : "left"));
     if ((t.z || 0) > 0) w.push("in front of the things around it");
     if ((t.z || 0) < 0) w.push("behind the things around it");
@@ -2302,7 +2362,11 @@
     // A picture is drawn when the name is finished, not on every key.
     if (el.dataset.tk === "name") {
       var nt = thingById(el.dataset.id); if (!nt) return;
-      setArt(nt, g); save(); renderRoom(); return;
+      setArt(nt, g); save(); renderRoom();
+      // Keep the card's picture in step with the new name, without redrawing the box being typed in.
+      var icon = el.parentNode.querySelector(".big");
+      if (icon) icon.innerHTML = iconHtml(nt);
+      return;
     }
     if (act === "clue") {
       var t = thingById(el.dataset.id); if (!t) return;
@@ -2353,9 +2417,8 @@
     else if (act === "tab") { state.tab = el.dataset.tab; save(); renderPanel(); }
     else if (act === "add") {
       var n = g.things.length;
-      var t = { id: uid(), emoji: el.dataset.emoji, name: "Thing " + (n + 1), x: 20 + (n * 13) % 62, y: 35 + (n * 17) % 40,
-                size: 70, say: "", clue: false, clueText: "", exit: false, inside: "" };
-      FRESH[t.id] = true;
+      var t = newThing(el.dataset.name || "Thing " + (n + 1));
+      t.emoji = el.dataset.emoji; t.x = 20 + (n * 13) % 62; t.y = 35 + (n * 17) % 40;
       g.things.push(t); state.sel = t.id; save(); renderAll();
       var nameInput = document.querySelector("#panel [data-tk=name]");
       if (nameInput) { nameInput.focus(); nameInput.select(); }
@@ -2365,22 +2428,23 @@
       g.things.forEach(function (t) { if (t.inside === el.dataset.id) t.inside = ""; });
       state.sel = null; save(); renderAll();
     }
-    else if (/^(flip|rotl|rotr|tofront|toback|dup|floor|wall|blend)$/.test(act)) {
+    else if (/^(flip|rotl|rotr|tofront|toback|dup|floor|wall)$/.test(act)) {
       var it = thingById(el.dataset.id); if (!it) return;
+      var before = { flip: it.flip, rot: it.rot };
       var zs = g.things.filter(function (o) { return o.id !== it.id; }).map(function (o) { return o.z || 0; });
       if (act === "flip") it.flip = !it.flip;
-      else if (act === "rotl" || act === "rotr") it.turn = Math.max(-60, Math.min(60, (it.turn || 0) + (act === "rotr" ? 30 : -30)));
+      else if (act === "rotl" || act === "rotr") it.rot = normRot((it.rot || 0) + (act === "rotr" ? 15 : -15));
       else if (act === "tofront") it.z = (zs.length ? Math.max.apply(null, zs) : 0) + 1;
       else if (act === "toback") it.z = (zs.length ? Math.min.apply(null, zs) : 0) - 1;
       else if (act === "floor") it.y = Math.max(it.y, 66);
       else if (act === "wall") it.y = Math.min(it.y, 28);
-      else if (act === "blend") it.blend = it.blend === false;
       else if (act === "dup") {
         var cp = clone(it);
         cp.id = uid(); cp.x = Math.min(94, it.x + 8); cp.exit = false; cp.clue = false; cp.clueText = ""; cp.inside = "";
         FRESH[cp.id] = true; g.things.push(cp); state.sel = cp.id;
       }
       save(); renderRoom(); renderPanel(); renderGuide();
+      if (act === "flip" || act === "rotl" || act === "rotr") animateLook(it, before);
     }
     else if (act === "library") openLibrary();
     else if (act === "copychange") {
@@ -2564,7 +2628,7 @@
         var box = -1;
         g.things.forEach(function (o, i) { if (o.id === t.inside) box = i; });
         return [t.emoji, t.name, t.x, t.y, t.size, t.say, t.clue ? 1 : 0, t.clueText, t.exit ? 1 : 0, box, t.art ? 1 : 0,
-                t.flip ? 1 : 0, t.rot || 0, t.z || 0, t.blend === false ? 0 : 1, t.turn || 0];
+                t.flip ? 1 : 0, t.rot || 0, t.z || 0];
       }) };
     return btoa(unescape(encodeURIComponent(JSON.stringify(slim))));
   }
@@ -2574,7 +2638,7 @@
     g.things = (o.things || []).map(function (a, i) {
       return { id: "s" + i, emoji: a[0], name: a[1], x: a[2], y: a[3], size: a[4], say: a[5], clue: !!a[6], clueText: a[7], exit: !!a[8],
                inside: a[9] >= 0 ? "s" + a[9] : "", art: a[10] ? artFor(a[1]) : "",
-               flip: !!a[11], rot: a[12] || 0, z: a[13] || 0, blend: a[14] !== 0, turn: a[15] || 0 };
+               flip: !!a[11], rot: a[12] || 0, z: a[13] || 0 };
     });
     return g;
   }
