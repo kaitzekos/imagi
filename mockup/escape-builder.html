@@ -316,7 +316,7 @@
   .guide .face svg { display: block; width: 100%; height: 100%; }
   .guide b { font-size: 12px; color: var(--violet); letter-spacing: .9px; text-transform: uppercase; font-weight: 700; }
   .guide p { margin: 10px 0 0; font-size: 18px; font-weight: 700; line-height: 1.35; letter-spacing: -.1px; }
-  .side.ask .guide p { font-size: 22px; line-height: 1.25; letter-spacing: -.3px; }
+  .side.ask .guide p { font-size: 22px; line-height: 1.35; letter-spacing: -.3px; }
 
   /* ---------- panel ---------- */
   .side h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: -.3px; }
@@ -516,9 +516,150 @@
     .room { min-height: 420px; }
     .steps { margin: 0; }
   }
+
+  /* ---------- title screen: the mission, one action, a room that's already waiting ---------- */
+  #intro {
+    position: fixed; inset: 0; z-index: 300; overflow: auto; background: var(--paper);
+    display: grid; grid-template-rows: auto 1fr auto; padding: 28px max(28px, 5vw) 20px;
+  }
+  #intro[hidden] { display: none; }
+  .intro-top { display: flex; align-items: baseline; gap: 12px; }
+  .intro-top .mark { font-size: 28px; }
+  .intro-main {
+    display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.15fr); gap: clamp(28px, 4vw, 64px);
+    align-items: center; max-width: 1440px; width: 100%; margin: 0 auto; padding-block: 24px;
+  }
+  .intro-copy { display: grid; gap: 22px; min-width: 0; }
+  .intro-copy h1 {
+    margin: 0; font-family: var(--f-round); font-weight: 700; font-size: clamp(40px, 4.4vw, 70px);
+    line-height: 1.02; letter-spacing: -.02em; text-wrap: balance; overflow-wrap: break-word;
+  }
+  .intro-copy .lead { margin: 0; font-size: clamp(19px, 1.5vw, 23px); line-height: 1.45; max-width: 30ch; color: var(--ink); }
+  .intro-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .intro-steps li {
+    display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 8px; border-radius: 999px;
+    background: var(--lilac); font-weight: 700; font-size: 15px;
+  }
+  .intro-steps b {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--white); color: var(--violet-d);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 13px;
+  }
+  .intro-steps li.now { background: var(--lime); }
+  .intro-scene .it.inwall.square::before { left: 8%; right: 8%; top: 8%; bottom: 8%; border-radius: 8%; }
+  .intro-go { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .intro-go .btn.go {
+    font-size: 21px; padding: 18px 34px; border-radius: 999px; background: var(--violet); color: var(--white);
+    box-shadow: 0 10px 24px #6c43ff40; transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .intro-go .btn.go:hover { background: var(--violet-d); transform: translateY(-2px); box-shadow: 0 14px 30px #6c43ff4d; }
+  .intro-go .btn.go:active { transform: translateY(1px); }
+  .intro-go .link {
+    border: 0; background: none; padding: 6px 2px; font: inherit; font-weight: 700; color: var(--violet-d);
+    text-decoration: underline; text-underline-offset: 4px; cursor: pointer;
+  }
+  .intro-foot { margin: 0; text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* The room on the title screen: real library pictures, hung, standing and set into the wall. */
+  .intro-scene {
+    position: relative; aspect-ratio: 16 / 11; max-width: 100%; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(180deg, #ece6ff 0%, #e2d8ff 62%, #f1e3cc 62%, #e9d6b6 100%);
+    box-shadow: 0 30px 60px #211b2b24, inset 0 0 0 10px #ffffff66;
+  }
+  .intro-scene::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 62%; height: 3px; background: #211b2b14;
+  }
+  .intro-scene .lampbeam {
+    position: absolute; left: 50%; top: -10%; width: 64%; height: 86%; transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 0%, #fffbe8cc 0%, #fffbe800 62%); pointer-events: none;
+  }
+  .intro-scene .rug {
+    position: absolute; left: 22%; right: 26%; top: 74%; height: 16%; border-radius: 50%;
+    background: #d9cbff; box-shadow: inset 0 0 0 6px #cdbdfa;
+  }
+  .intro-scene .it { position: absolute; transform: translate(-50%, -50%); display: block; }
+  .intro-scene .it img { display: block; width: 100%; height: auto; filter: drop-shadow(0 8px 6px #1e143c33); }
+  .intro-scene .it.floor::after {
+    content: ""; position: absolute; left: 12%; right: 12%; bottom: -4%; height: 12%; border-radius: 50%; z-index: -1;
+    background: radial-gradient(closest-side, #120b2266, #120b2200);
+  }
+  .intro-scene .it.nail::before {
+    content: ""; position: absolute; left: 50%; top: -22%; width: 48%; height: 26%; transform: translateX(-50%);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M5 35 32 6 59 35' fill='none' stroke='%23463a5c' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='4.5' fill='%23463a5c'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  }
+  .intro-scene .it.inwall::before {
+    content: ""; position: absolute; left: 20%; right: 20%; top: 4%; bottom: 2%; z-index: -1;
+    border-radius: 50% 50% 4% 4% / 30% 30% 4% 4%; background: #1e143c2e;
+    box-shadow: inset 0 4px 10px #1e143c55, 0 0 0 6px #ffffff66;
+  }
+  .intro-scene .it .lockb {
+    position: absolute; top: 2%; right: 6%; width: 34px; height: 34px; border-radius: 50%; background: var(--white);
+    display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 8px #211b2b30;
+  }
+  .intro-guide {
+    position: absolute; left: 4%; top: 6%; display: flex; align-items: flex-start; gap: 10px; max-width: 46%;
+  }
+  .intro-guide .face { width: 64px; flex: none; }
+  .intro-guide .bubble {
+    background: var(--white); border-radius: 18px 18px 18px 4px; padding: 12px 16px; font-weight: 700; font-size: clamp(15px, 1.2vw, 18px);
+    box-shadow: 0 6px 18px #211b2b1f; line-height: 1.3;
+  }
+  .intro-guide .bubble i { font-style: normal; color: var(--violet-d); }
+  @media (prefers-reduced-motion: no-preference) {
+    .intro-scene .it { animation: introIn .7s cubic-bezier(.3, 1.5, .5, 1) both; }
+    .intro-scene .it.bob img { animation: bob 3.2s ease-in-out 1s infinite; }
+    .intro-guide { animation: guideIn .6s ease-out .9s both; }
+  }
+  @keyframes introIn { from { opacity: 0; transform: translate(-50%, -30%) scale(.7); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  @keyframes guideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @media (max-width: 900px) {
+    .intro-main { grid-template-columns: minmax(0, 1fr); }
+    .intro-scene { order: -1; }
+  }
 </style>
 </head>
 <body>
+
+<!-- Title screen: shown on every visit except shared play links. "Start building" goes to move 1. -->
+<section id="intro" aria-labelledby="introTitle" hidden>
+  <div class="intro-top logo"><span class="mark">imaginable</span><span class="prod">Escape Builder</span></div>
+  <div class="intro-main">
+    <div class="intro-copy">
+      <h1 id="introTitle">Can your classmates escape a world you invented?</h1>
+      <p class="lead">Dream up a room, hide a clue, lock the way out. Then watch a friend try to escape, and make it better.</p>
+      <ol class="intro-steps" aria-label="How it works">
+        <li class="now"><b>1</b>Imagine</li><li><b>2</b>Build</li><li><b>3</b>Escape</li><li><b>4</b>Test</li><li><b>5</b>Share</li>
+      </ol>
+      <div class="intro-go">
+        <button class="btn go" type="button" id="introStart">Start building</button>
+        <button class="link" type="button" id="introNew" hidden>Start a new one</button>
+      </div>
+    </div>
+    <div class="intro-scene" aria-hidden="true">
+      <span class="lampbeam"></span>
+      <span class="rug"></span>
+      <span class="it inwall square" style="left:13%;top:34%;width:15%;animation-delay:.1s"><img src="assets/things/window.webp" alt=""></span>
+      <span class="it nail" style="left:55%;top:29%;width:13%;animation-delay:.15s"><img src="assets/things/painting.webp" alt=""></span>
+      <span class="it nail" style="left:70%;top:20%;width:9%;animation-delay:.25s"><img src="assets/things/clock.webp" alt=""></span>
+      <span class="it inwall" style="left:86%;top:47%;width:22%;animation-delay:.35s"><img src="assets/things/door.webp" alt=""><span class="lockb">🔒</span></span>
+      <span class="it floor bob" style="left:22%;top:71%;width:18%;animation-delay:.45s"><img src="assets/things/robot.webp" alt=""></span>
+      <span class="it floor" style="left:44%;top:70%;width:14%;animation-delay:.55s"><img src="assets/things/chair.webp" alt=""></span>
+      <span class="it floor" style="left:37%;top:86%;width:12%;animation-delay:.65s"><img src="assets/things/chest.webp" alt=""></span>
+      <span class="it floor" style="left:63%;top:80%;width:9%;animation-delay:.75s"><img src="assets/things/cupcake.webp" alt=""></span>
+      <span class="it floor" style="left:72%;top:66%;width:11%;animation-delay:.85s"><img src="assets/things/plant.webp" alt=""></span>
+      <div class="intro-guide">
+        <span class="face"><svg viewBox="0 0 64 56">
+          <path d="M8 44C20 51 40 50 46 38 52 26 46 8 30 8 14 8 8 24 14 34 20 44 40 46 57 39" fill="none" stroke="#6c43ff" stroke-width="3.6" stroke-linecap="round"/>
+          <circle cx="25" cy="24" r="2.6" fill="#211b2b"/><circle cx="35" cy="24" r="2.6" fill="#211b2b"/>
+          <path d="M24 31q6 5 12 0" fill="none" stroke="#211b2b" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M50 9l4-5M54 15l6-2" fill="none" stroke="#6c43ff" stroke-width="3" stroke-linecap="round"/>
+        </svg></span>
+        <span class="bubble">Where is your escape room? <i>Tell me one place with one strange detail.</i></span>
+      </div>
+    </div>
+  </div>
+  <p class="intro-foot">Concept prototype by Kai for Imaginable. Scripted guide. Not yet tested with children.</p>
+</section>
 
 <div id="app">
   <header class="top">
@@ -657,51 +798,94 @@
   // While that picture loads, the library picture of the main word (or the emoji) stands in.
   // LIB maps a word to the colours seen in its picture; the Lovable brief uses them to describe it.
   /* LIB:START */
-  var LIB = { "alien": "green", "anchor": "orange and brown", "apple": "orange and red",
-    "astronaut": "orange and peach", "backpack": "orange and brown", "bag": "brown and orange",
-    "baker": "orange and brown", "ball": "brown and orange", "balloon": "red and orange", "banana": "orange and gold",
-    "barrel": "brown and orange", "basket": "brown and orange", "basketball": "orange and brown",
-    "bat": "brown and orange", "bath": "orange and brown", "bathtub": "brown and orange",
-    "battery": "orange and brown", "bear": "brown and orange", "bed": "brown and orange", "bee": "brown and gold",
-    "bell": "brown and orange", "bin": "brown and teal", "blackboard": "brown", "blanket": "orange and peach",
-    "board": "brown and orange", "boat": "brown and orange", "book": "orange and brown", "books": "orange and brown",
-    "bookshelf": "orange and brown", "boot": "brown and orange", "bottle": "brown and orange",
-    "box": "brown and orange", "bread": "brown and orange", "broom": "brown and orange", "bucket": "orange and brown",
-    "bunny": "orange and brown", "burger": "brown and orange", "butterfly": "orange and brown",
-    "cactus": "yellow and brown", "cage": "brown and orange", "cake": "brown and orange",
-    "calendar": "orange and brown", "camera": "orange and brown", "candle": "orange and peach",
-    "candy": "orange and peach", "car": "orange and brown", "cards": "orange and peach", "carpet": "orange",
-    "carrot": "brown and orange", "cash": "green", "castle": "orange and brown", "cat": "brown and orange",
-    "cauldron": "brown and green", "chair": "orange and brown", "chalkboard": "brown and grey",
-    "cheese": "brown and yellow", "chef": "orange and peach", "chest": "orange and brown", "chocolate": "brown",
-    "clock": "orange and peach", "cloud": "peach and orange", "clown": "orange and brown", "coat": "brown and orange",
-    "coin": "orange and brown", "comet": "orange and brown", "compass": "brown and orange",
-    "computer": "orange and brown", "cookie": "brown and orange", "coral": "orange and red",
-    "couch": "orange and brown", "crab": "orange and red", "crate": "brown and orange", "crayon": "orange",
-    "cream": "brown and green", "crown": "orange and gold", "cup": "brown and orange", "cupcake": "brown and orange",
-    "cushion": "orange and brown", "desk": "brown and orange", "diamond": "teal and orange",
-    "dice": "peach and orange", "dinosaur": "brown and orange", "dog": "brown and orange", "dolphin": "teal",
-    "donut": "pink and brown", "door": "brown and orange", "dragon": "orange and brown", "drum": "orange and brown",
-    "egg": "peach and orange", "envelope": "orange", "fairy": "orange and brown", "fire": "orange and brown",
-    "fireplace": "orange and brown", "fish": "brown and orange", "flag": "brown and orange",
-    "flashlight": "orange and yellow", "flour": "brown and orange", "flower": "orange and green",
-    "football": "peach and red", "fountain": "brown", "freezer": "grey and green", "fridge": "peach and brown",
-    "frog": "green and yellow", "game": "orange and brown", "gate": "brown and orange", "gem": "red and brown",
-    "ghost": "peach and orange", "gift": "orange and brown", "glass": "teal", "glasses": "brown and orange",
-    "globe": "yellow and teal", "guitar": "orange and brown", "hammer": "grey and brown", "hat": "orange and peach",
-    "headphones": "brown and orange", "honey": "brown and orange", "ice": "blue and teal", "jar": "orange and brown",
-    "jelly": "orange and brown", "juice": "brown and orange", "key": "orange and brown", "king": "brown and orange",
-    "kite": "orange and brown", "knight": "brown", "ladder": "brown and orange", "lamp": "orange and brown",
-    "laptop": "orange and teal", "letter": "orange", "light": "orange and brown", "lightning": "brown and orange",
-    "loaf": "brown and orange", "lock": "orange and brown", "log": "brown and orange", "lollipop": "red and orange",
-    "magnet": "orange and brown", "map": "orange and yellow", "mermaid": "orange and teal",
-    "microphone": "brown and orange", "microscope": "brown and orange", "milk": "peach and teal",
-    "mirror": "orange and teal", "money": "green", "monkey": "brown and orange", "monster": "orange and brown",
-    "moon": "yellow and brown", "mouse": "brown and orange", "mug": "orange and brown",
-    "mushroom": "orange and brown", "newspaper": "brown and peach", "noodles": "orange and brown",
-    "note": "peach and orange", "notes": "peach and brown", "octopus": "orange and brown", "oven": "brown and orange",
-    "owl": "brown and orange", "paint": "orange and red", "painting": "orange and brown", "panda": "brown and orange",
-    "paper": "peach and orange" };
+  var LIB = { "alarm": "peach and brown", "alien": "green", "anchor": "blue", "apple": "red and brown",
+    "astronaut": "orange and peach", "backpack": "brown and blue", "bag": "brown and orange",
+    "baker": "orange and peach", "ball": "teal and orange", "balloon": "red and brown", "banana": "yellow and gold",
+    "barrel": "brown", "basket": "brown and orange", "basketball": "brown and orange", "bat": "grey",
+    "bath": "orange and peach", "bathtub": "peach and orange", "battery": "blue and brown",
+    "bear": "brown and orange", "bed": "brown and blue", "bee": "brown and grey", "bell": "orange and brown",
+    "bench": "brown and orange", "bin": "brown and green", "blackboard": "brown", "blanket": "orange and blue",
+    "board": "brown and orange", "boat": "brown and blue", "book": "brown and orange", "bookcase": "orange and brown",
+    "books": "orange and green", "bookshelf": "brown and orange", "boot": "orange and brown",
+    "bottle": "green and orange", "bowl": "brown and orange", "box": "brown and orange", "bread": "orange and brown",
+    "broom": "orange and brown", "bucket": "brown and orange", "bunny": "orange and peach",
+    "burger": "brown and orange", "butterfly": "orange and brown", "button": "orange and brown",
+    "cabinet": "orange and brown", "cable": "brown and orange", "cactus": "green and brown",
+    "cage": "brown and orange", "cake": "orange and brown", "calculator": "brown and orange",
+    "calendar": "orange and peach", "camera": "gold and brown", "candle": "brown and orange",
+    "candy": "orange and brown", "car": "red and teal", "cards": "peach and red", "carpet": "orange and red",
+    "carrot": "green and orange", "cash": "green", "castle": "orange and brown", "cat": "orange and brown",
+    "cauldron": "brown", "chain": "brown and orange", "chair": "brown and orange", "chalk": "orange and peach",
+    "chalkboard": "grey and brown", "cheese": "gold and orange", "chef": "peach and orange",
+    "chest": "brown and orange", "chocolate": "brown", "clipboard": "white and orange", "clock": "orange and peach",
+    "closet": "orange and brown", "cloud": "blue and teal", "clown": "blue and orange", "coat": "orange and brown",
+    "codebook": "brown and orange", "coin": "orange and brown", "comet": "orange and gold",
+    "compass": "orange and peach", "computer": "blue and orange", "control": "orange and brown",
+    "cookie": "orange and brown", "coral": "red", "couch": "orange and brown", "crab": "orange",
+    "crate": "brown and orange", "crayon": "orange", "cream": "brown and green", "crown": "gold and brown",
+    "cup": "brown and teal", "cupboard": "brown and orange", "cupcake": "pink and brown",
+    "curtain": "brown and orange", "cushion": "orange", "desk": "brown and orange", "dial": "peach and orange",
+    "diamond": "blue and teal", "diary": "orange and brown", "dice": "orange and peach", "dinosaur": "green",
+    "dog": "brown and orange", "dolphin": "blue and teal", "donut": "pink and brown", "door": "brown",
+    "dragon": "green and red", "drawer": "brown and orange", "drum": "orange and brown", "egg": "peach and orange",
+    "engine": "blue and brown", "envelope": "orange and brown", "eraser": "red and peach", "fairy": "green and brown",
+    "fan": "orange and brown", "fire": "brown and red", "fireplace": "brown and orange", "fish": "red and brown",
+    "flag": "orange and red", "flashlight": "blue and brown", "flour": "orange and brown", "flower": "green and red",
+    "folder": "orange and brown", "football": "brown and peach", "fork": "orange and brown",
+    "fountain": "brown and blue", "frame": "teal and brown", "freezer": "teal and blue", "fridge": "teal",
+    "frog": "green", "game": "orange and brown", "gate": "brown and orange", "gear": "orange and brown",
+    "gem": "red and blue", "ghost": "peach and white", "gift": "orange and brown", "glass": "blue and peach",
+    "glasses": "orange and teal", "globe": "green and blue", "guitar": "brown and orange", "hammer": "grey and brown",
+    "hat": "brown and orange", "headphones": "blue and red", "heater": "orange and brown", "helmet": "grey",
+    "honey": "brown and orange", "hourglass": "orange and brown", "ice": "teal and blue", "jar": "peach and orange",
+    "jelly": "red and brown", "juice": "orange and brown", "kettle": "teal and blue", "key": "yellow and gold",
+    "keyboard": "orange and brown", "keypad": "orange and brown", "king": "orange and brown",
+    "kite": "orange and red", "knight": "grey and brown", "ladder": "brown and orange", "lamp": "orange",
+    "laptop": "orange and peach", "letter": "peach and orange", "lever": "blue and orange",
+    "light": "orange and yellow", "lightning": "blue and yellow", "loaf": "brown and orange",
+    "lock": "gold and orange", "log": "brown and orange", "lollipop": "red and orange", "machine": "green and teal",
+    "magnet": "red", "magnifying-glass": "teal and brown", "mailbox": "blue", "map": "peach and orange",
+    "marker": "peach and red", "mermaid": "orange and green", "microphone": "grey and brown",
+    "microscope": "brown and teal", "milk": "orange and blue", "mirror": "blue and orange", "money": "green",
+    "monkey": "orange and brown", "monster": "green", "moon": "yellow and gold", "mouse": "grey",
+    "mug": "brown and orange", "mushroom": "orange and green", "newspaper": "peach and orange",
+    "noodles": "blue and gold", "note": "orange", "notebook": "orange", "notes": "peach and orange",
+    "octopus": "orange and brown", "oven": "orange and blue", "owl": "brown and orange",
+    "padlock": "orange and brown", "paint": "orange and teal", "painting": "brown and grey", "pan": "grey and brown",
+    "panda": "grey and peach", "panel": "orange and brown", "paper": "peach and orange", "parrot": "red and green",
+    "pen": "orange and blue", "pencil": "orange and gold", "penguin": "grey and peach", "phone": "red",
+    "piano": "brown and orange", "picture": "brown and teal", "pie": "orange and brown", "pillow": "peach and orange",
+    "pipe": "blue and brown", "pirate": "orange and brown", "pizza": "red and orange", "planet": "teal and orange",
+    "plant": "green and brown", "plate": "peach and orange", "popcorn": "yellow and red",
+    "portrait": "brown and green", "post": "red", "poster": "orange and brown", "pot": "brown and orange",
+    "potion": "pink and orange", "present": "brown and red", "princess": "red and orange",
+    "pumpkin": "brown and orange", "puzzle": "red and orange", "queen": "orange and red",
+    "rabbit": "brown and orange", "radio": "brown and orange", "rainbow": "peach and orange",
+    "receipt": "yellow and peach", "register": "orange and peach", "ring": "brown and gold", "robot": "teal and blue",
+    "rock": "brown and orange", "rocket": "red and blue", "rug": "orange and red", "ruler": "orange and brown",
+    "sack": "orange and brown", "safe": "blue", "sandwich": "orange and brown", "satellite": "brown and orange",
+    "scissors": "orange and teal", "screen": "blue and grey", "scroll": "orange and brown", "seaweed": "green",
+    "shark": "blue and orange", "shelf": "brown and orange", "shell": "orange and peach",
+    "shelves": "brown and orange", "shield": "orange and brown", "ship": "blue and orange",
+    "shoe": "orange and brown", "sign": "brown and orange", "sink": "orange and gold", "skull": "peach and orange",
+    "snack": "orange and gold", "snail": "brown and orange", "snake": "green and brown", "snow": "white and grey",
+    "snowman": "peach and orange", "soap": "teal", "sock": "peach and orange", "soda": "red and brown",
+    "sofa": "orange and brown", "spaceship": "red and blue", "spacesuit": "peach and orange",
+    "spider": "orange and grey", "spoon": "peach and teal", "star": "orange and gold", "statue": "brown and orange",
+    "sticker": "orange and brown", "sticky-note": "yellow and orange", "stone": "orange and brown",
+    "stool": "brown and orange", "stove": "blue and orange", "suitcase": "brown and orange", "sun": "yellow and gold",
+    "sweet": "blue and orange", "switch": "orange and peach", "table": "brown and orange",
+    "teacher": "orange and brown", "teapot": "brown and orange", "teddy-bear": "brown and orange",
+    "telescope": "brown and blue", "television": "grey and brown", "tent": "orange and brown",
+    "ticket": "orange and brown", "toilet": "peach and orange", "toolbox": "red", "torch": "blue and yellow",
+    "toy": "orange and teal", "train": "red and blue", "trap": "brown and orange", "trash": "grey",
+    "treasure": "orange and brown", "tree": "green and brown", "trophy": "brown and orange",
+    "trumpet": "orange and yellow", "turtle": "brown and green", "ufo": "teal and brown",
+    "umbrella": "green and orange", "unicorn": "peach and white", "vampire": "grey and black",
+    "vase": "brown and orange", "vent": "orange and brown", "violin": "brown and orange", "volcano": "brown and red",
+    "wardrobe": "orange and brown", "wave": "blue and teal", "whale": "blue", "whiteboard": "peach and orange",
+    "window": "orange and teal", "wire": "blue and orange", "witch": "blue and brown", "wizard": "blue and brown",
+    "wrench": "grey and orange", "yarn": "brown and orange", "zombie": "green and brown" };
   /* LIB:END */
   var SYN = { kitty: "cat", kitten: "cat", puppy: "dog", doggy: "dog", doughnut: "donut", dino: "dinosaur", tv: "television",
     teddy: "teddy-bear", "teddy-bear": "teddy-bear", "post-it": "sticky-note", postit: "sticky-note", "sticky-note": "sticky-note",
@@ -2422,9 +2606,23 @@
     save();
   }
 
+  // ---------- title screen ----------
+  // Shown on every visit except a shared play link. A saved game gets "Continue" and a way to start fresh.
+  function showIntro() {
+    var saved = state.move > 0 || G().things.length > 0;
+    $("introStart").textContent = saved ? "Continue my escape room" : "Start building";
+    $("introNew").hidden = !saved;
+    $("intro").hidden = false;
+    setTimeout(function () { $("introStart").focus(); }, 50);
+  }
+  function hideIntro() { $("intro").hidden = true; if (state.step === "ask") focusMove(); }
+  $("introStart").addEventListener("click", hideIntro);
+  $("introNew").addEventListener("click", function () { hideIntro(); $("restartBtn").click(); });
+
   // ---------- start ----------
   var m = location.hash.match(/^#play=(.+)$/);
   renderAll();
+  if (!m) showIntro();
   if (m) {
     try { openPlay(decodeGame(m[1]), "shared"); }
     catch (e) { toast("That play link is broken. Ask for a new one."); }
