@@ -237,6 +237,64 @@
     display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px #211b2b26;
   }
 
+  /* ---------- room editor: flip, rotate, layers, blend, handles, grid ---------- */
+  /* Pictures face the viewer. Turning swivels them left or right like a real object (3D, eased);
+     "turn around" swivels 180 degrees; the tilt handle leans them. The name tag stays readable. */
+  .thing .emo {
+    transform: perspective(700px) rotateY(var(--turn, 0deg)) rotate(var(--rot, 0deg));
+    transition: transform .6s cubic-bezier(.45, .05, .25, 1);
+  }
+  .thing.dragging .emo { transition: none; }
+  /* Hung on the wall: framed things hang from a nail on a string; paper is taped up. */
+  .thing.hang-nail .emo::before {
+    content: ""; position: absolute; left: 50%; top: -.3em; width: .64em; height: .36em; transform: translateX(-50%); z-index: -1;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M5 35 32 6 59 35' fill='none' stroke='%23463a5c' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='4.5' fill='%23463a5c'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  }
+  .room.dark .thing.hang-nail .emo::before { filter: invert(1) brightness(1.4); }
+  .thing.hang-tape .emo::before {
+    content: ""; position: absolute; left: 50%; top: .04em; width: .44em; height: .13em; z-index: 2;
+    transform: translateX(-50%) rotate(-5deg); background: #fffbe8cc; box-shadow: 0 1px 2px #0003;
+  }
+  /* Doors, windows and gates are part of the wall: a recessed frame, no floor shadow, no floating. */
+  .thing.inwall .emo { filter: drop-shadow(0 0 1px #1e143c33); }
+  .thing.inwall .emo::after { display: none; }
+  /* A doorway: an arched opening cut into the wall, just around the door. */
+  .thing.inwall .emo::before {
+    content: ""; position: absolute; left: 22%; right: 22%; top: 5%; bottom: 3%; z-index: -1;
+    border-radius: 50% 50% 4% 4% / 30% 30% 4% 4%;
+    background: #1e143c2e; box-shadow: inset 0 .05em .12em #1e143c55, 0 0 0 .07em #ffffff66, 0 0 0 .1em #1e143c1a;
+  }
+  /* A window, vent or fireplace: a square opening with a sill line. */
+  .thing.inwall.square .emo::before { left: 10%; right: 10%; top: 12%; bottom: 12%; border-radius: 6%; }
+  .thing.inwall .emo .tint { opacity: .6; }
+  /* Blend in: the room's wall colour washes over the picture (masked to its shape), so it sits in the room. */
+  .thing .emo .tint {
+    position: absolute; left: 4px; top: 4px; width: 1.3em; height: 1.3em; pointer-events: none;
+    background: var(--tint, transparent); mix-blend-mode: multiply; opacity: .45;
+    -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat;
+  }
+  .room.dark .thing .emo .tint { mix-blend-mode: soft-light; opacity: .7; }
+  .thing .h {
+    position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--violet); color: var(--white);
+    border: 3px solid var(--white); box-shadow: 0 2px 8px #211b2b40; font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; z-index: 3; touch-action: none;
+  }
+  .thing .h-size { right: -14px; bottom: 18px; cursor: nwse-resize; }
+  .thing .h-rot { left: 50%; top: -34px; margin-left: -15px; cursor: grab; }
+  .room.grid::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    background-image: linear-gradient(#211b2b14 1px, transparent 1px), linear-gradient(90deg, #211b2b14 1px, transparent 1px);
+    background-size: 4% 4%;
+  }
+  .edit-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .edit-tools .btn { padding: 8px 12px; font-size: 14px; }
+  .edit-tools .btn.on { background: var(--violet); color: var(--white); box-shadow: none; }
+  .restart-btn {
+    border: 0; border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 700;
+    background: var(--white); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); cursor: pointer;
+  }
+  .restart-btn:hover { box-shadow: inset 0 0 0 1.5px var(--violet); color: var(--violet-d); }
+
   /* One quiet toolbar under the room, like Play / Undo / Versions in the deck. */
   .toolbar { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; min-height: 44px; }
   .tool {
@@ -412,6 +470,7 @@
   }
   .over h2 { margin: 0; font-family: var(--f-round); font-size: 44px; }
   .over p { margin: 0; font-size: 22px; max-width: 640px; line-height: 1.4; }
+  .over p.lovnote { font-size: 17px; font-weight: 700; background: var(--lime); color: var(--ink); padding: 8px 16px; border-radius: 999px; }
   .over .ebig { font-size: 64px; }
   /* After a shared game: the deck's "What would your version be? Make my own" strip. */
   .mine {
@@ -468,6 +527,7 @@
     <div class="topright">
       <span class="saved" id="saved" title="Saved in this browser only">Saved</span>
       <div class="ver" id="ver">Version 1</div>
+      <button class="restart-btn" id="restartBtn" type="button">↺ Start over</button>
     </div>
   </header>
 
@@ -509,7 +569,7 @@
       <div class="room build" id="room"></div>
       <div class="toolbar" id="toolbar"></div>
       <p class="stage-tip" id="stTip"></p>
-      <p class="stage-tip">Concept prototype by Kai for Imaginable. Scripted guide. Pictures drawn by AI. Not yet tested with children.</p>
+      <p class="stage-tip">Concept prototype by Kai for Imaginable. Scripted guide. Pictures pre-drawn by AI and checked by hand. Not yet tested with children.</p>
     </section>
   </div>
 </div>
@@ -588,28 +648,107 @@
     ]
   };
 
-  // Picture prompts for the example's things (Zib and Blorp are aliens).
-  ["green alien", "purple space monster", "shop receipt", "round window with a planet outside", "donut", "snack fridge"]
-    .forEach(function (w, i) {
-      EXAMPLE.things[i].art = artFor(w, { world: "a snack shop on a spaceship", mood: EXAMPLE.mood }, i === 5 ? "exit" : i === 2 ? "clue" : "");
-    });
 
-  // ---------- pictures: drawn by /api/draw on the hosted page (PLAN.md D13) ----------
-  // Pictures get better as the moves go on: the world (move 1), the colours and mood (move 3),
-  // which thing is the locked exit (move 5) and which hides the clue (move 7) all go into the drawing.
-  // The code, hint and messages never do. The server keeps only safe, known words.
-  // Opened as a local file, or if drawing fails, the emoji stays.
-  function artFor(name, g, role) {
-    var w = lower(name).replace(/[^a-z '-]/g, "").replace(/\s+/g, " ").trim().slice(0, 39);
-    if (location.protocol === "file:" || !/^[a-z]/.test(w) || /^thing$/.test(w)) return "";
-    var clean = function (s) { return lower(s).replace(/[^a-z '-]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80); };
-    var place = clean(g && g.world), look = clean(g && g.mood);
-    return "/api/draw?thing=" + encodeURIComponent(w) + (place ? "&in=" + encodeURIComponent(place) : "") +
-      (look ? "&look=" + encodeURIComponent(look) : "") + (role ? "&role=" + role : "");
+  // ---------- pictures: a pre-drawn library first, AI only for what it doesn't have (PLAN.md D20) ----------
+  // Every room word on the drawing list was drawn once, facing the viewer, in one clay style, and checked by hand.
+  // A thing whose name is just a library word ("chairs", "a big chair") uses the library: free and instant.
+  // Only a name the library can't match ("candy machine", "blue chair") asks the AI, once per name: the server
+  // checks it with a safety filter first, and the CDN keeps the picture so the next child gets it free.
+  // While that picture loads, the library picture of the main word (or the emoji) stands in.
+  // LIB maps a word to the colours seen in its picture; the Lovable brief uses them to describe it.
+  /* LIB:START */
+  var LIB = { "alien": "green", "anchor": "orange and brown", "apple": "orange and red",
+    "astronaut": "orange and peach", "backpack": "orange and brown", "bag": "brown and orange",
+    "baker": "orange and brown", "ball": "brown and orange", "balloon": "red and orange", "banana": "orange and gold",
+    "barrel": "brown and orange", "basket": "brown and orange", "basketball": "orange and brown",
+    "bat": "brown and orange", "bath": "orange and brown", "bathtub": "brown and orange",
+    "battery": "orange and brown", "bear": "brown and orange", "bed": "brown and orange", "bee": "brown and gold",
+    "bell": "brown and orange", "bin": "brown and teal", "blackboard": "brown", "blanket": "orange and peach",
+    "board": "brown and orange", "boat": "brown and orange", "book": "orange and brown", "books": "orange and brown",
+    "bookshelf": "orange and brown", "boot": "brown and orange", "bottle": "brown and orange",
+    "box": "brown and orange", "bread": "brown and orange", "broom": "brown and orange", "bucket": "orange and brown",
+    "bunny": "orange and brown", "burger": "brown and orange", "butterfly": "orange and brown",
+    "cactus": "yellow and brown", "cage": "brown and orange", "cake": "brown and orange",
+    "calendar": "orange and brown", "camera": "orange and brown", "candle": "orange and peach",
+    "candy": "orange and peach", "car": "orange and brown", "cards": "orange and peach", "carpet": "orange",
+    "carrot": "brown and orange", "cash": "green", "castle": "orange and brown", "cat": "brown and orange",
+    "cauldron": "brown and green", "chair": "orange and brown", "chalkboard": "brown and grey",
+    "cheese": "brown and yellow", "chef": "orange and peach", "chest": "orange and brown", "chocolate": "brown",
+    "clock": "orange and peach", "cloud": "peach and orange", "clown": "orange and brown", "coat": "brown and orange",
+    "coin": "orange and brown", "comet": "orange and brown", "compass": "brown and orange",
+    "computer": "orange and brown", "cookie": "brown and orange", "coral": "orange and red",
+    "couch": "orange and brown", "crab": "orange and red", "crate": "brown and orange", "crayon": "orange",
+    "cream": "brown and green", "crown": "orange and gold", "cup": "brown and orange", "cupcake": "brown and orange",
+    "cushion": "orange and brown", "desk": "brown and orange", "diamond": "teal and orange",
+    "dice": "peach and orange", "dinosaur": "brown and orange", "dog": "brown and orange", "dolphin": "teal",
+    "donut": "pink and brown", "door": "brown and orange", "dragon": "orange and brown", "drum": "orange and brown",
+    "egg": "peach and orange", "envelope": "orange", "fairy": "orange and brown", "fire": "orange and brown",
+    "fireplace": "orange and brown", "fish": "brown and orange", "flag": "brown and orange",
+    "flashlight": "orange and yellow", "flour": "brown and orange", "flower": "orange and green",
+    "football": "peach and red", "fountain": "brown", "freezer": "grey and green", "fridge": "peach and brown",
+    "frog": "green and yellow", "game": "orange and brown", "gate": "brown and orange", "gem": "red and brown",
+    "ghost": "peach and orange", "gift": "orange and brown", "glass": "teal", "glasses": "brown and orange",
+    "globe": "yellow and teal", "guitar": "orange and brown", "hammer": "grey and brown", "hat": "orange and peach",
+    "headphones": "brown and orange", "honey": "brown and orange", "ice": "blue and teal", "jar": "orange and brown",
+    "jelly": "orange and brown", "juice": "brown and orange", "key": "orange and brown", "king": "brown and orange",
+    "kite": "orange and brown", "knight": "brown", "ladder": "brown and orange", "lamp": "orange and brown",
+    "laptop": "orange and teal", "letter": "orange", "light": "orange and brown", "lightning": "brown and orange",
+    "loaf": "brown and orange", "lock": "orange and brown", "log": "brown and orange", "lollipop": "red and orange",
+    "magnet": "orange and brown", "map": "orange and yellow", "mermaid": "orange and teal",
+    "microphone": "brown and orange", "microscope": "brown and orange", "milk": "peach and teal",
+    "mirror": "orange and teal", "money": "green", "monkey": "brown and orange", "monster": "orange and brown",
+    "moon": "yellow and brown", "mouse": "brown and orange", "mug": "orange and brown",
+    "mushroom": "orange and brown", "newspaper": "brown and peach", "noodles": "orange and brown",
+    "note": "peach and orange", "notes": "peach and brown", "octopus": "orange and brown", "oven": "brown and orange",
+    "owl": "brown and orange", "paint": "orange and red", "painting": "orange and brown", "panda": "brown and orange",
+    "paper": "peach and orange" };
+  /* LIB:END */
+  var SYN = { kitty: "cat", kitten: "cat", puppy: "dog", doggy: "dog", doughnut: "donut", dino: "dinosaur", tv: "television",
+    teddy: "teddy-bear", "teddy-bear": "teddy-bear", "post-it": "sticky-note", postit: "sticky-note", "sticky-note": "sticky-note",
+    "magnifying-glass": "magnifying-glass", refrigerator: "fridge", couch: "couch", settee: "sofa", "cell-phone": "phone",
+    mobile: "phone", bookcase: "bookcase", "book-shelf": "bookshelf", "fire-place": "fireplace", bunny: "bunny", bin: "bin" };
+  // Words that don't change what the thing is: the size comes from the size handle instead.
+  var FILLER = /^(a|an|the|some|my|our|one|two|three|four|five|lots|of|big|small|tiny|little|large|huge|giant)$/;
+  function libWord(p) {
+    if (SYN[p] && LIB[SYN[p]]) return SYN[p];
+    if (LIB[p]) return p;
+    var s1 = p.replace(/es$/, ""), s2 = p.replace(/s$/, "");
+    return LIB[s1] ? s1 : LIB[s2] ? s2 : "";
   }
-  function artOf(t, g) { return artFor(t.name, g, t.exit ? "exit" : t.clue ? "clue" : ""); }
+  function coreWords(name) {
+    return lower(name).replace(/[^a-z '-]/g, " ").split(/\s+/).filter(function (w) { return w && !FILLER.test(w); });
+  }
+  // The library word when the whole name is one library thing; "" otherwise.
+  function libKey(name) {
+    var c = coreWords(name);
+    if (!c.length) return "";
+    var whole = libWord(c.join("-"));
+    if (whole) return whole;
+    return c.length === 1 ? libWord(c[0]) : "";
+  }
+  // The main word, for a stand-in picture while the AI draws ("chocolate door" -> door).
+  function headKey(name) {
+    var c = coreWords(name);
+    for (var i = c.length - 1; i >= 0; i--) { var k = libWord(c[i]); if (k) return k; }
+    return "";
+  }
+  var AI_MAX = 6;   // at most this many AI pictures per game; after that, library or emoji
+  function pickArt(name, g) {
+    var k = libKey(name), h = headKey(name), lib = function (w) { return w ? "assets/things/" + w + ".webp" : ""; };
+    if (k) return { src: lib(k), base: "" };
+    var c = coreWords(name), phrase = c.join(" ");
+    var aiUsed = g ? g.things.filter(function (t) { return /^\/api\/draw/.test(t.art || ""); }).length : 0;
+    var canAI = location.protocol !== "file:" && c.length && c.length <= 3 && phrase.length <= 30 && !/^thing$/.test(phrase) && aiUsed < AI_MAX;
+    if (!canAI) return { src: lib(h), base: "" };
+    return { src: "/api/draw?thing=" + encodeURIComponent(phrase), base: lib(h) };
+  }
+  function artFor(name) { return pickArt(name).src; }
+  function setArt(t, g) { var a = pickArt(t.name, g); t.art = a.src; t.base = a.base; }
+  // Library pictures for the example's things (Zib and Blorp are aliens).
+  ["alien", "monster", "receipt", "window", "donut", "fridge"]
+    .forEach(function (w, i) { EXAMPLE.things[i].art = artFor(w); });
   // Called when an answer that changes the pictures comes in.
-  function redraw(g) { g.things.forEach(function (t) { t.art = artOf(t, g); }); }
+  function redraw(g) { g.things.forEach(function (t) { setArt(t, g); }); }
   // One request per picture per page, however often the room re-renders.
   var ART = {};
   function whenArt(url, cb) {
@@ -706,8 +845,9 @@
   // Things and badges that should animate in on the next render.
   var FRESH = {}, FRESH_BADGE = {};
   function newThing(name) {
-    var t = { id: uid(), emoji: emojiFor(name), art: artFor(name, state.game), name: name, x: 50, y: 60, size: CREATURE.test(name) ? 86 : 68,
+    var t = { id: uid(), emoji: emojiFor(name), art: "", name: name, x: 50, y: 60, size: CREATURE.test(name) ? 86 : 68,
               say: "", clue: false, clueText: "", exit: false, inside: "" };
+    setArt(t, state.game);
     FRESH[t.id] = true;
     return t;
   }
@@ -831,7 +971,7 @@
     return { step: "ask", move: 0, stuck: 0, nudge: "", ack: "", clueFor: "", themePicked: false,
              version: 1, versions: [], game: blankGame(), sel: null, tab: "Exits",
              lastTest: null, checks: {}, note: { change: "", keep: "", check: "", why: "" }, invite: "", coach: "",
-             expect: "", help: {} };
+             expect: "", help: {}, lovable: false };
   }
   function load() {
     try {
@@ -842,7 +982,7 @@
           if (s.step === "idea") s.step = "ask";
           // Games saved before pictures existed get them from their names.
           // Pictures follow the latest drawing rules (name plus world).
-          (s.game.things || []).forEach(function (t) { if (t.art !== "" || !("art" in t)) t.art = artOf(t, s.game); });
+          (s.game.things || []).forEach(function (t) { setArt(t, s.game); });
           return Object.assign(blankState(), s);
         }
       }
@@ -914,7 +1054,9 @@
     var g = G(), s = state.step, n = g.things.length, ex = exitOf(g), cl = cluesOf(g), code = (g.code || "").trim();
     if (s === "ask") {
       var ack = filled(state.ack) ? "<span class=\"ack\">" + state.ack + "</span>" : "";
-      if (state.move >= MOVES.length) return ack + "That's all 10 moves. Every decision is yours. Now build it for real: copy your prompt into Lovable. While it builds, what should happen after a wrong code?";
+      if (state.move >= MOVES.length) return ack + (state.lovable
+        ? "Your prompt is on its way to Lovable. Building takes a few minutes, so play your game here while you wait. Then play the Lovable one. What changed?"
+        : "That's all 10 moves. Every decision is yours. Play it here now, or build it for real in Lovable too. While it builds, you can play it here.");
       if (filled(state.nudge)) return state.nudge;
       return ack + MOVES[state.move].q;
     }
@@ -1075,8 +1217,26 @@
     var k = wall ? 1 : Math.max(.85, Math.min(1.18, .85 + (t.y - 50) / 45 * .33));
     var emo = el.querySelector(".emo");
     if (emo) emo.style.fontSize = Math.round(t.size * k) + "px";
-    el.style.zIndex = String(10 + Math.round(t.y));
-    el.classList.toggle("onwall", wall);
+    // Lower on the screen = nearer = in front; "Bring to front" / "Send to back" add whole layers.
+    el.style.zIndex = String(10 + Math.round(t.y) + (t.z || 0) * 100);
+    var n = " " + lower(t.name) + " ", inwall = INWALL_RE.test(n);
+    el.classList.toggle("onwall", wall && !inwall);
+    el.classList.toggle("inwall", inwall);
+    el.classList.toggle("square", inwall && /[^a-z](windows?|vents?|fireplaces?|hatch)[^a-z]/.test(n));
+    el.classList.toggle("hang-nail", wall && !inwall && NAIL_RE.test(n));
+    el.classList.toggle("hang-tape", wall && !inwall && !NAIL_RE.test(n) && TAPE_RE.test(n));
+  }
+  // What kind of wall thing it is, from its name.
+  var INWALL_RE = /[^a-z](doors?|windows?|gates?|vents?|fireplaces?|curtains?|archway|portal|hatch)[^a-z]/;
+  var NAIL_RE = /[^a-z](paintings?|pictures?|posters?|frames?|portraits?|clocks?|signs?|maps?|calendars?|mirrors?|flags?|boards?|whiteboard|blackboard|chalkboard|photos?|tv|television|screens?)[^a-z]/;
+  var TAPE_RE = /[^a-z](notes?|letters?|papers?|receipts?|tickets?|envelopes?|newspapers?|cards?|drawings?|post-?its?|sticky)[^a-z]/;
+  // Turn, tilt and blend, shared by the builder and the player.
+  function applyLook(el, t, g) {
+    var emo = el.querySelector(".emo"); if (!emo) return;
+    emo.style.setProperty("--turn", ((t.turn || 0) + (t.flip ? 180 : 0)) + "deg");
+    emo.style.setProperty("--rot", (t.rot || 0) + "deg");
+    var th = THEMES[(g || G()).theme] || THEMES.lilac;
+    emo.style.setProperty("--tint", t.blend === false ? "transparent" : th.wall);
   }
 
   function thingEl(t, mode) {
@@ -1091,13 +1251,27 @@
     emo.className = "emo";
     emo.style.fontSize = t.size + "px";
     emo.textContent = t.emoji;
-    if (t.art) whenArt(t.art, function () {
+    // The library stand-in shows first; the exact picture replaces it when it arrives, never the other way round.
+    var shown = 0;
+    var put = function (src, rank) {
+      if (rank < shown) return; shown = rank;
       var img = document.createElement("img");
-      img.className = "art"; img.alt = ""; img.src = t.art;
+      img.className = "art"; img.alt = ""; img.src = src;
       emo.textContent = ""; emo.appendChild(img);
-    });
+      // The tint layer takes the picture's own shape, so only the object changes colour.
+      var tint = document.createElement("span");
+      tint.className = "tint"; tint.style.setProperty("--mask", "url(\"" + src + "\")");
+      emo.appendChild(tint);
+    };
+    if (t.base && t.base !== t.art) whenArt(t.base, function () { put(t.base, 1); });
+    if (t.art) whenArt(t.art, function () { put(t.art, 2); });
     b.appendChild(emo);
     applyDepth(b, t);
+    applyLook(b, t, mode === "play" && P ? P.game : null);
+    // The selected thing gets handles in the Build step: drag ⤡ to resize, ⟳ to turn.
+    if (mode === "build" && state.step === "build" && state.sel === t.id) {
+      b.insertAdjacentHTML("beforeend", "<span class=\"h h-size\" data-h=\"size\" title=\"Drag to resize\">⤡</span><span class=\"h h-rot\" data-h=\"rot\" title=\"Drag to tilt\">⟳</span>");
+    }
     if (mode === "build") {
       var tag = document.createElement("span");
       tag.className = "tag";
@@ -1143,12 +1317,16 @@
       : g.things.length
       ? "<button class=\"tool primary\" type=\"button\" data-tool=\"me\">▶ Play</button>" +
         "<button class=\"tool\" type=\"button\" data-tool=\"player\">👀 Give to a player</button>" +
-        (state.versions.length ? "<button class=\"tool\" type=\"button\" data-tool=\"versions\">🗂️ Versions</button>" : "")
+        (state.versions.length ? "<button class=\"tool\" type=\"button\" data-tool=\"versions\">🗂️ Versions</button>" : "") +
+        (state.step === "build" ? "<button class=\"tool\" type=\"button\" data-tool=\"grid\" aria-pressed=\"" + !!state.grid + "\">" + (state.grid ? "▦ Grid on" : "▦ Grid off") + "</button>" : "")
       : "";
+    room.classList.toggle("grid", !!state.grid && state.step === "build");
     $("stTip").textContent = state.step === "ask" && state.move >= MOVES.length
       ? "🪄 This is a quick sketch of your plan. Your real game, built in Lovable, will look and play much better. Go build it there!"
       : state.step === "ask" ? (g.things.length ? "Your room builds as you answer. Drag things to move them. 🔒 = exit, 🔎 = clue." : "")
-      : state.step === "build" || state.step === "escape"
+      : state.step === "build"
+      ? "Drag to move. Pick a thing, then drag ⤡ to resize and ⟳ to turn. 🔒 = exit, 🔎 = holds a clue."
+      : state.step === "escape"
       ? "Drag things to move them. Click a thing to change it. 🔒 = exit, 🔎 = holds a clue."
       : "";
   }
@@ -1272,7 +1450,7 @@
       "<input type=\"text\" data-tk=\"name\" data-id=\"" + t.id + "\" value=\"" + esc(t.name) + "\" aria-label=\"Name\"></div>" +
       "<label>When someone clicks it, it says</label>" +
       "<textarea data-tk=\"say\" data-id=\"" + t.id + "\" placeholder=\"Something short. Funny is good.\">" + esc(t.say) + "</textarea>" +
-      "<label>Size</label><input type=\"range\" min=\"36\" max=\"150\" value=\"" + t.size + "\" data-tk=\"size\" data-id=\"" + t.id + "\">";
+      "<label>Size</label><input type=\"range\" min=\"36\" max=\"220\" value=\"" + t.size + "\" data-tk=\"size\" data-id=\"" + t.id + "\">";
     if (detail) {
       h += "<label class=\"toggle\"><input type=\"checkbox\" data-act=\"clue\" data-id=\"" + t.id + "\"" + (t.clue ? " checked" : "") + "> Holds a clue</label>";
       if (t.clue) {
@@ -1289,6 +1467,14 @@
         h += "</select><p class=\"muted\">Hidden things appear only when the player clicks the thing they're inside.</p>";
       }
     }
+    var tb = function (act, label, on) {
+      return "<button class=\"btn ghost small" + (on ? " on" : "") + "\" type=\"button\" data-act=\"" + act + "\" data-id=\"" + t.id + "\"" +
+        (on != null ? " aria-pressed=\"" + !!on + "\"" : "") + ">" + label + "</button>";
+    };
+    h += "<label>Move and shape it</label><div class=\"edit-tools\">" +
+      tb("rotl", "↶ Turn left") + tb("rotr", "↷ Turn right") + tb("flip", "↻ Turn around", !!t.flip) +
+      tb("tofront", "⬆ To front") + tb("toback", "⬇ To back") + tb("dup", "⧉ Copy") +
+      tb("floor", "On the floor") + tb("wall", "On the wall") + tb("blend", "🎨 Blend in", t.blend !== false) + "</div>";
     h += "<div class=\"row\" style=\"margin-top:12px\"><button class=\"btn danger small\" type=\"button\" data-act=\"del\" data-id=\"" + t.id + "\">Remove</button></div></div>";
     return h;
   }
@@ -1299,9 +1485,15 @@
   function askPanel(g) {
     var h = "", n = state.move;
     if (n >= MOVES.length) {
-      h += "<h2>Your game plan is ready</h2><p class=\"lead\">10 moves. 10 decisions. All yours. Now build it for real in Lovable.</p>";
-      h += "<ol class=\"howto\"><li>Copy your prompt.</li><li>Open Lovable in imagi.</li><li>Paste it and press Enter.</li></ol>";
-      h += "<button class=\"btn wide lime\" type=\"button\" data-act=\"copyprompt\">🪄 Copy my Lovable prompt</button>";
+      h += "<h2>Your game is ready</h2><p class=\"lead\">10 moves. 10 decisions. All yours. Now play it, two ways.</p>";
+      h += "<h3>Play it here</h3><p class=\"muted\">Right now, in this room.</p>";
+      h += "<button class=\"btn wide\" type=\"button\" data-act=\"play\" data-who=\"me\">▶ Play it here</button>";
+      h += "<h3>Build it for real in Lovable</h3>";
+      h += "<ol class=\"howto\"><li>Copy your prompt.</li><li>Open Lovable in imagi, paste it and press Enter.</li>" +
+        "<li>While it builds, play it here.</li><li>When it's ready, play both. What's different?</li></ol>";
+      h += "<button class=\"btn wide lime\" type=\"button\" data-act=\"copyprompt\">" + (state.lovable ? "✓ Copied. Copy it again" : "🪄 Copy my Lovable prompt") + "</button>";
+      h += "<p class=\"muted\">Lovable's version will look different from this sketch. It might be even better.</p>";
+      if (state.lovable) h += "<button class=\"btn wide\" type=\"button\" data-act=\"play\" data-who=\"me\">▶ Play here while Lovable builds</button>";
       h += "<label for=\"buildExpect\">While it builds: what should happen when someone types a wrong code?</label>" +
         "<textarea id=\"buildExpect\" data-expect=\"1\" placeholder=\"When someone types a wrong code...\">" + esc(state.expect) + "</textarea>";
       h += "<details class=\"seeprompt\"><summary>See my prompt</summary><p class=\"muted\">It's long on purpose. Every one of your decisions is in it, plus exact rules, so imagi builds your game the way you planned it.</p><pre class=\"prompt\">" + esc(lovablePrompt(g)) + "</pre></details>";
@@ -1385,10 +1577,11 @@
     } else if (state.move === 7) {
       chainPopup(g);
     } else if (state.move === MOVES.length) {
-      popup({ emoji: "🗝️", title: "Your game plan is ready",
-        body: "<p>10 moves. 10 decisions. All yours.</p><p>Now build it for real. Copy your prompt and paste it into Lovable in imagi.</p>",
-        primary: "🪄 Copy my Lovable prompt", lime: true, secondary: "Not yet",
-        onPrimary: function () { copy(lovablePrompt(G()), "Prompt copied. Paste it into Lovable in imagi."); } });
+      popup({ emoji: "🗝️", title: "Your game is ready",
+        body: "<p>10 moves. 10 decisions. All yours.</p><p>Play it here now, or build it for real in Lovable too. Lovable takes a few minutes, so you can play it here while it builds.</p>",
+        primary: "🪄 Copy prompt for Lovable", lime: true, secondary: "▶ Play it here",
+        onPrimary: copyBrief,
+        onSecondary: function () { openPlay(clone(G()), "me"); } });
     }
   }
   function focusMove() {
@@ -1463,6 +1656,17 @@
     }
     if (s === "test") {
       h += "<h2>4. Test it</h2><p class=\"lead\">\"It works\" is a guess until you try it.</p>";
+      // The refine loop: the change planned on the last version goes to Lovable as its own prompt.
+      var pv = state.versions[state.versions.length - 1];
+      if (pv) {
+        var sent = state.sentChange === state.version;
+        h += "<div class=\"report\"><b>Send Version " + state.version + "'s change to Lovable</b><br>" +
+          (filled(pv.note && pv.note.change) ? "Your plan: " + esc(pv.note.change) + (filled(pv.note.why) ? ", because " + esc(pv.note.why) : "") + "." : "Your change, in your words.") + "</div>";
+        h += "<button class=\"btn wide lime\" type=\"button\" data-act=\"copychange\">" + (sent ? "✓ Copied. Copy it again" : "🪄 Copy my change for Lovable") + "</button>";
+        h += "<p class=\"muted\">" + (sent ? "Lovable is updating your game. Play this version here while it builds, then play both. Which one is better?"
+          : "Paste it into the same Lovable project. It changes only what you planned.") + "</p>";
+        h += "<details class=\"seeprompt\"><summary>See the change prompt</summary><pre class=\"prompt\">" + esc(changePrompt()) + "</pre></details>";
+      }
       h += "<div class=\"row\"><button class=\"btn\" type=\"button\" data-act=\"play\" data-who=\"me\">▶ Play it myself</button>" +
         "<button class=\"btn soft\" type=\"button\" data-act=\"play\" data-who=\"player\">👀 Give it to a new player</button></div>";
       h += "<h3>What you have seen work (Version " + state.version + ")</h3><ul class=\"checklist\">";
@@ -1510,7 +1714,7 @@
         "<button class=\"btn soft\" type=\"button\" data-act=\"play\" data-who=\"player\">👀 Play here with a friend</button></div>";
       h += "<p class=\"muted\">Your teacher sends the link. You choose who to invite.</p>";
       h += "<h3>Build it for real in Lovable</h3>";
-      h += "<p class=\"muted\">Your room becomes the starting prompt. Check it, then paste it into Lovable.</p>";
+      h += "<p class=\"muted\">Your room becomes a full build brief. Copy it and paste it into Lovable in imagi. Lovable's version will look different from this sketch. It might be even better.</p>";
       h += "<button class=\"btn ghost small\" type=\"button\" data-act=\"copyprompt\">Copy my Lovable prompt</button>";
       h += "<pre class=\"prompt\">" + esc(lovablePrompt(g)) + "</pre>";
       h += "<h3>Prompt coach</h3>";
@@ -1551,8 +1755,8 @@
     var open = g.things.filter(function (t) { return !t.exit && !t.inside; });
     var hidden = g.things.filter(function (t) { return t.inside && thingById(t.inside); });
     var thingLine = function (t) {
-      return "  - " + t.name.trim() + (t.emoji ? " " + t.emoji : "") +
-        (filled(t.say) ? ": when clicked it says \"" + tidy(t.say) + "\"" : "") +
+      return "  - " + t.name.trim() + (t.emoji ? " " + t.emoji : "") + ": " + placeWords(t) + ", " + lookWords(t) +
+        (filled(t.say) ? ". When clicked it says \"" + tidy(t.say) + "\"" : "") +
         (t.clue ? " (this holds the clue)" : "");
     };
     var clueLine = cl
@@ -1584,7 +1788,7 @@
     hidden.forEach(function (t) {
       L.push("- Hidden: the " + lower(t.name) + " is inside the " + lower(thingById(t.inside).name) + ". It appears only after the player clicks the " + lower(thingById(t.inside).name) + ".");
     });
-    L.push("- The locked exit: the " + (ex ? lower(ex.name) + (ex.emoji ? " " + ex.emoji : "") + (filled(ex.say) ? ". When clicked it says \"" + tidy(ex.say) + "\"" : "") : B));
+    L.push("- The locked exit: the " + (ex ? lower(ex.name) + (ex.emoji ? " " + ex.emoji : "") + ", " + placeWords(ex) + ", " + lookWords(ex) + (filled(ex.say) ? ". When clicked it says \"" + tidy(ex.say) + "\"" : "") : B));
     L.push("- The clue: " + clueLine);
     L.push("- The secret code: " + code);
     L.push("- Hint button says: " + (filled(g.hint) ? "\"" + tidy(g.hint) + "\"" : "one short hint that points to where the clue is, never the code"));
@@ -1595,7 +1799,7 @@
     L.push("## Look and feel");
     L.push("Direction: the room is a real place in our world, in our colours and mood: " + stop(mood) + " It should look like a scene from a game, not a web page or a form.");
     L.push("- Draw a back wall and a floor in our colours, with depth: light coming from one side, a soft shadow under each thing, a darker edge where wall meets floor.");
-    L.push("- Draw every thing with CSS shapes and big emoji (at least 64px). Place them around the room where they would really be: on the floor, on a shelf, on the wall. Never in a grid or a list.");
+    L.push("- Draw every thing with CSS shapes and big emoji (at least 64px), matching how we describe it: its size, colours, which way it faces and how it's tilted. Put each one where we placed it (wall or floor, left, middle or right). Never in a grid or a list.");
     L.push("- Every thing reacts when the mouse is over it (a small lift or glow) and when clicked (a short wiggle), so players can tell it is clickable.");
     L.push("- The " + exitName + " is the biggest thing in the room. It looks locked (a padlock on it) and opens with a short, happy animation when the code is right.");
     L.push("- One bold, playful heading font that fits the mood, and easy-to-read body text of at least 18px. Strong contrast everywhere.");
@@ -1650,6 +1854,77 @@
     return L.join("\n");
   }
 
+  // ---------- where a thing is and how it looks, in words Lovable can draw from ----------
+  function placeWords(t) {
+    var side = t.x < 35 ? "on the left" : t.x > 65 ? "on the right" : "in the middle";
+    return (t.exit ? "" : t.y < 48 ? "on the wall, " : "on the floor, ") + side;
+  }
+  function lookWords(t) {
+    var k = libKey(t.name), w = [];
+    w.push(t.size < 60 ? "small" : t.size > 110 ? "big" : "medium-sized");
+    if (k && LIB[k]) w.push("drawn like a chunky clay toy, mostly " + LIB[k]);
+    if (t.flip) w.push("turned around to face the other way");
+    if (t.turn) w.push("turned " + Math.abs(t.turn) + " degrees to the " + (t.turn > 0 ? "right" : "left") + ", so we see it from the side a little");
+    if (t.rot) w.push("tilted " + Math.abs(t.rot) + " degrees to the " + (t.rot > 0 ? "right" : "left"));
+    if ((t.z || 0) > 0) w.push("in front of the things around it");
+    if ((t.z || 0) < 0) w.push("behind the things around it");
+    return w.join(", ");
+  }
+
+  // ---------- the refine loop: one change, sent to Lovable as its own prompt ----------
+  // Compares the version the plan was made on with the room now, so Lovable gets the exact change.
+  function diffGames(a, b) {
+    var out = [], q = function (s) { return "\"" + String(s || "").trim().replace(/\s*\n\s*/g, "; ").replace(/"/g, "'") + "\""; };
+    [["title", "Game name"], ["world", "Our world"], ["mood", "Colours and mood"], ["code", "Secret code"],
+     ["hint", "Hint"], ["wrong", "Wrong code message"], ["ending", "Ending"]].forEach(function (f) {
+      var was = String(a[f[0]] || "").trim(), now = String(b[f[0]] || "").trim();
+      if (was !== now) out.push(f[1] + ": now " + q(now) + (was ? " (was " + q(was) + ")" : ""));
+    });
+    var byId = {}; a.things.forEach(function (t) { byId[t.id] = t; });
+    b.things.forEach(function (t) {
+      var o = byId[t.id], n = "the " + lower(t.name);
+      if (!o) { out.push("Add " + n + (t.emoji ? " " + t.emoji : "") + ": " + placeWords(t) + ", " + lookWords(t) + (filled(t.say) ? ". When clicked it says " + q(t.say) : "") + "."); return; }
+      delete byId[t.id];
+      if (o.name !== t.name) out.push("Rename the " + lower(o.name) + " to " + lower(t.name) + ".");
+      if (placeWords(o) !== placeWords(t)) out.push("Move " + n + " " + placeWords(t) + ".");
+      if (lookWords(o) !== lookWords(t)) out.push("Make " + n + " " + lookWords(t) + ".");
+      if (String(o.say || "") !== String(t.say || "")) out.push("When clicked, " + n + " now says " + q(t.say) + ".");
+      if (!!o.clue !== !!t.clue || (t.clue && o.clueText !== t.clueText)) out.push(t.clue ? "The clue is now on " + n + ": it shows " + q(t.clueText) + "." : n.charAt(0).toUpperCase() + n.slice(1) + " no longer holds the clue.");
+      if (!!o.exit !== !!t.exit && t.exit) out.push("The locked exit is now " + n + ".");
+      if ((o.inside || "") !== (t.inside || "")) out.push(t.inside && thingById(t.inside) ? "Hide " + n + " inside the " + lower(thingById(t.inside).name) + "." : "Take " + n + " out, so it's always visible.");
+    });
+    Object.keys(byId).forEach(function (id) { out.push("Remove the " + lower(byId[id].name) + "."); });
+    return out;
+  }
+  function changePrompt() {
+    var B = "______", g = G(), prev = state.versions[state.versions.length - 1];
+    if (!prev) return "";
+    var note = prev.note || {}, ex = exitOf(g), exitName = ex ? lower(ex.name) : "exit";
+    var diff = diffGames(prev.game, g), L = [];
+    L.push("# Change for our escape room: Version " + state.version);
+    L.push("");
+    L.push("The game is already built. Make only the change below and keep everything else exactly as it is. Don't start again from scratch.");
+    L.push("");
+    L.push("## Change"); L.push(filled(note.change) ? note.change.trim() : B); L.push("");
+    L.push("## Because"); L.push(filled(note.why) ? note.why.trim() : B); L.push("");
+    if (diff.length) { L.push("## Exactly what changed in our plan"); diff.forEach(function (d) { L.push("- " + d); }); L.push(""); }
+    L.push("## Keep");
+    if (filled(note.keep)) L.push("- " + note.keep.trim());
+    L.push("- The secret code (" + (filled(g.code) ? g.code.trim() : B) + ") and the code check: capitals, spaces and punctuation don't matter.");
+    L.push("- The clue, the hint, the wrong code message, the ending, Restart and the look, unless listed above.");
+    L.push("- One screen. No sign-in, saving, sounds, timer, score, image files, internet pictures or AI inside the game.");
+    L.push("");
+    L.push("## Check before you say it's done");
+    if (filled(note.check)) L.push("- " + note.check.trim());
+    L.push("- The right code still opens the " + exitName + ". A wrong or empty code keeps it shut and never shows the code.");
+    L.push("- The hint never shows the code.");
+    L.push("- Restart after escaping puts everything back.");
+    L.push("- No errors in the browser console.");
+    L.push("");
+    L.push("When you finish, tell me in plain words what changed and what to click to test it.");
+    return L.join("\n");
+  }
+
   // ---------- prompt coach ----------
   function renderCoach() {
     var out = $("coachOut"); if (!out) return;
@@ -1681,6 +1956,8 @@
     if (el.dataset.k) {
       g[el.dataset.k] = el.value;
       if (el.dataset.k === "title") $("stTitle").textContent = titleOf(g);
+      // Keep any brief on screen in step with what the child just typed.
+      [].forEach.call(document.querySelectorAll("#panel pre.prompt"), function (p) { p.textContent = lovablePrompt(g); });
       save(); refreshLight(); return;
     }
     if (el.dataset.tk) {
@@ -1706,7 +1983,7 @@
     // A picture is drawn when the name is finished, not on every key.
     if (el.dataset.tk === "name") {
       var nt = thingById(el.dataset.id); if (!nt) return;
-      nt.art = artOf(nt, g); save(); renderRoom(); return;
+      setArt(nt, g); save(); renderRoom(); return;
     }
     if (act === "clue") {
       var t = thingById(el.dataset.id); if (!t) return;
@@ -1769,6 +2046,27 @@
       g.things.forEach(function (t) { if (t.inside === el.dataset.id) t.inside = ""; });
       state.sel = null; save(); renderAll();
     }
+    else if (/^(flip|rotl|rotr|tofront|toback|dup|floor|wall|blend)$/.test(act)) {
+      var it = thingById(el.dataset.id); if (!it) return;
+      var zs = g.things.filter(function (o) { return o.id !== it.id; }).map(function (o) { return o.z || 0; });
+      if (act === "flip") it.flip = !it.flip;
+      else if (act === "rotl" || act === "rotr") it.turn = Math.max(-60, Math.min(60, (it.turn || 0) + (act === "rotr" ? 30 : -30)));
+      else if (act === "tofront") it.z = (zs.length ? Math.max.apply(null, zs) : 0) + 1;
+      else if (act === "toback") it.z = (zs.length ? Math.min.apply(null, zs) : 0) - 1;
+      else if (act === "floor") it.y = Math.max(it.y, 66);
+      else if (act === "wall") it.y = Math.min(it.y, 28);
+      else if (act === "blend") it.blend = it.blend === false;
+      else if (act === "dup") {
+        var cp = clone(it);
+        cp.id = uid(); cp.x = Math.min(94, it.x + 8); cp.exit = false; cp.clue = false; cp.clueText = ""; cp.inside = "";
+        FRESH[cp.id] = true; g.things.push(cp); state.sel = cp.id;
+      }
+      save(); renderRoom(); renderPanel(); renderGuide();
+    }
+    else if (act === "copychange") {
+      copy(changePrompt(), "Change copied. Paste it into Lovable in imagi, then play here while it updates.");
+      state.sentChange = state.version; save(); renderPanel();
+    }
     else if (act === "example") openPlay(clone(EXAMPLE), "example");
     else if (act === "play") openPlay(clone(g), el.dataset.who);
     else if (act === "nextver") {
@@ -1778,7 +2076,7 @@
       state.step = "build"; save(); renderAll();
       replay($("ver"), "bump");
       popup({ emoji: "💾", title: "Version " + (state.version - 1) + " is saved",
-        body: "<p>If a change goes wrong, you can go back to it.</p><p>Make one change, then test it again.</p>" +
+        body: "<p>If a change goes wrong, you can go back to it.</p><p>Make your change in the room. Then test it here, and send the same change to Lovable from the Test step.</p>" +
           "<p><b>Swap seats.</b> The other partner drives this version.</p>",
         primary: "Make my change →" });
     }
@@ -1796,8 +2094,15 @@
         primary: "🔗 Copy play link", secondary: "Not now",
         onPrimary: function () { copy(location.href.split("#")[0] + "#play=" + encodeGame(g), "Play link copied."); } });
     }
-    else if (act === "copyprompt") copy(lovablePrompt(g), "Prompt copied. Paste it into Lovable.");
+    else if (act === "copyprompt") copyBrief();
   });
+
+  // Copy the Lovable brief and remember it went, so the game can say "play here while it builds".
+  function copyBrief() {
+    copy(lovablePrompt(G()), "Prompt copied. Paste it into Lovable in imagi, then play here while it builds.");
+    state.lovable = true; save();
+    if (state.step === "ask") { renderPanel(); renderGuide(); }
+  }
 
   function copy(text, msg) {
     function fallback() {
@@ -1809,39 +2114,73 @@
     else fallback();
   }
 
-  // ---------- events: room (select + drag) ----------
+  // ---------- events: room (select, drag, resize, turn) ----------
   var drag = null;
+  function normRot(r) { r = ((r % 360) + 540) % 360 - 180; return Math.abs(r) < 4 ? 0 : r; }
+  function addHandles(el) {
+    document.querySelectorAll("#room .thing .h").forEach(function (h) { h.remove(); });
+    el.insertAdjacentHTML("beforeend", "<span class=\"h h-size\" data-h=\"size\" title=\"Drag to resize\">⤡</span><span class=\"h h-rot\" data-h=\"rot\" title=\"Drag to tilt\">⟳</span>");
+  }
   $("room").addEventListener("pointerdown", function (e) {
     var el = e.target.closest(".thing");
     if (!el) { if (state.sel) { state.sel = null; save(); renderRoom(); renderPanel(); } return; }
     var t = thingById(el.dataset.id); if (!t) return;
     e.preventDefault();
+    var handle = e.target.closest("[data-h]");
     var changed = state.sel !== t.id;
     state.sel = t.id;
     document.querySelectorAll("#room .thing.sel").forEach(function (x) { x.classList.remove("sel"); });
     el.classList.add("sel");
-    drag = { el: el, t: t };
+    var b = el.querySelector(".emo").getBoundingClientRect();
+    var cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+    drag = { el: el, t: t, mode: handle && state.step === "build" ? handle.dataset.h : "move",
+             cx: cx, cy: cy, size0: t.size, d0: Math.max(12, Math.hypot(e.clientX - cx, e.clientY - cy)) };
     el.setPointerCapture(e.pointerId);
+    // While a hand is on it, the picture follows instantly; the eased turn is for button presses.
+    el.classList.add("dragging");
     // During the ten moves, things can be dragged without leaving the questions.
     if (state.step === "ask") return;
     // Otherwise clicking a thing opens it for editing in the Build step.
-    if (state.step !== "build") { state.step = "build"; renderSteps(); renderPanel(); renderGuide(); }
-    else if (changed) { renderPanel(); renderGuide(); }
+    if (state.step !== "build") { state.step = "build"; renderSteps(); renderPanel(); renderGuide(); addHandles(el); $("room").classList.toggle("grid", !!state.grid); }
+    else if (changed) { addHandles(el); renderPanel(); renderGuide(); }
   });
   $("room").addEventListener("pointermove", function (e) {
     if (!drag) return;
+    var t = drag.t;
+    if (drag.mode === "size") {
+      t.size = Math.max(36, Math.min(220, Math.round(drag.size0 * Math.hypot(e.clientX - drag.cx, e.clientY - drag.cy) / drag.d0)));
+      drag.el.querySelector(".emo").style.fontSize = t.size + "px";
+      applyDepth(drag.el, t);
+      return;
+    }
+    if (drag.mode === "rot") {
+      // The tilt handle sits above the thing, so straight up is 0 degrees. Snaps to 5 degrees.
+      var a = Math.atan2(e.clientY - drag.cy, e.clientX - drag.cx) * 180 / Math.PI + 90;
+      t.rot = normRot(Math.round(a / 5) * 5);
+      applyLook(drag.el, t);
+      return;
+    }
     var r = $("room").getBoundingClientRect();
     var x = Math.max(3, Math.min(97, (e.clientX - r.left) / r.width * 100));
     var y = Math.max(5, Math.min(95, (e.clientY - r.top) / r.height * 100));
-    drag.t.x = Math.round(x * 10) / 10; drag.t.y = Math.round(y * 10) / 10;
-    drag.el.style.left = drag.t.x + "%"; drag.el.style.top = drag.t.y + "%";
-    applyDepth(drag.el, drag.t);
+    // With the grid on, things click into place on a 4% grid.
+    if (state.grid && state.step === "build") { x = Math.round(x / 4) * 4; y = Math.round(y / 4) * 4; }
+    t.x = Math.round(x * 10) / 10; t.y = Math.round(y * 10) / 10;
+    drag.el.style.left = t.x + "%"; drag.el.style.top = t.y + "%";
+    applyDepth(drag.el, t);
   });
-  function endDrag() { if (drag) { drag = null; save(); } }
+  function endDrag() {
+    if (!drag) return;
+    var resized = drag.mode !== "move";
+    drag.el.classList.remove("dragging");
+    drag = null; save();
+    if (resized && state.step === "build") renderPanel();
+  }
   $("toolbar").addEventListener("click", function (e) {
     var b = e.target.closest("[data-tool]"); if (!b) return;
+    if (b.dataset.tool === "grid") { state.grid = !state.grid; save(); renderRoom(); return; }
     if (b.dataset.tool === "versions") go("test");
-    else if (b.dataset.tool === "lovable") copy(lovablePrompt(G()), "Prompt copied. Paste it into Lovable in imagi.");
+    else if (b.dataset.tool === "lovable") copyBrief();
     else openPlay(clone(G()), b.dataset.tool);
   });
   $("room").addEventListener("pointerup", endDrag);
@@ -1853,7 +2192,8 @@
       things: g.things.map(function (t) {
         var box = -1;
         g.things.forEach(function (o, i) { if (o.id === t.inside) box = i; });
-        return [t.emoji, t.name, t.x, t.y, t.size, t.say, t.clue ? 1 : 0, t.clueText, t.exit ? 1 : 0, box, t.art ? 1 : 0];
+        return [t.emoji, t.name, t.x, t.y, t.size, t.say, t.clue ? 1 : 0, t.clueText, t.exit ? 1 : 0, box, t.art ? 1 : 0,
+                t.flip ? 1 : 0, t.rot || 0, t.z || 0, t.blend === false ? 0 : 1, t.turn || 0];
       }) };
     return btoa(unescape(encodeURIComponent(JSON.stringify(slim))));
   }
@@ -1862,7 +2202,8 @@
     var g = Object.assign(blankGame(), o);
     g.things = (o.things || []).map(function (a, i) {
       return { id: "s" + i, emoji: a[0], name: a[1], x: a[2], y: a[3], size: a[4], say: a[5], clue: !!a[6], clueText: a[7], exit: !!a[8],
-               inside: a[9] >= 0 ? "s" + a[9] : "", art: a[10] ? artFor(a[1], o, a[8] ? "exit" : a[6] ? "clue" : "") : "" };
+               inside: a[9] >= 0 ? "s" + a[9] : "", art: a[10] ? artFor(a[1]) : "",
+               flip: !!a[11], rot: a[12] || 0, z: a[13] || 0, blend: a[14] !== 0, turn: a[15] || 0 };
     });
     return g;
   }
@@ -1995,6 +2336,7 @@
     var ov = document.createElement("div");
     ov.className = "over"; ov.id = "pEnd";
     ov.innerHTML = "<div class=\"ebig\">🎉</div><h2>You escaped!</h2><p>" + esc(filled(g.ending) ? g.ending : "You got out!") + "</p>" +
+      (P.who === "me" && state.lovable ? "<p class=\"lovnote\">Your Lovable version is building too. When it's ready, play it and spot what's different.</p>" : "") +
       (P.who === "shared" ? "<div class=\"mine\"><span>What would your version be?</span><button class=\"btn small\" type=\"button\" id=\"pMake\">Make my own →</button></div>" : "");
     room.appendChild(ov);
     var mk = ov.querySelector("#pMake");
@@ -2030,6 +2372,21 @@
     say("Click things in the room to look around.");
   });
   $("pStop").addEventListener("click", function () { closePlay(); });
+
+  // Start over: wipes this browser's game and versions, after a confirm step on the page.
+  $("restartBtn").addEventListener("click", function () {
+    popup({ emoji: "↺", title: "Start over?",
+      body: "<p>This deletes your game and all its versions in this browser. You can't undo it.</p>",
+      primary: "Yes, start over", secondary: "Keep my game",
+      onPrimary: function () {
+        try { localStorage.removeItem(KEY); } catch (e) { /* storage blocked: nothing saved anyway */ }
+        state = blankState(); ART = {};
+        history.replaceState(null, "", location.pathname + location.search);
+        if (!$("play").hidden) { $("play").hidden = true; document.body.style.overflow = ""; P = null; }
+        lastGuide = ""; renderAll(); focusMove();
+        toast("New game. Where is your escape room?");
+      } });
+  });
 
   function closePlay() {
     var tested = P && (P.who === "me" || P.who === "player") && P.started;

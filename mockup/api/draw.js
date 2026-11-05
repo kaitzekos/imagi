@@ -1,6 +1,7 @@
-// GET /api/draw?thing=table -> a picture of one thing for the Escape Builder room (PLAN.md D13).
+// GET /api/draw?thing=table -> a picture of one thing for the Escape Builder room (PLAN.md D13, D20).
 // Prototype only. The key lives in Vercel's settings (OPENAI_API_KEY), never in the page.
-// Each word is paid for once: Vercel's CDN keeps the answer, so repeats are free.
+// Each name is paid for once: Vercel's CDN keeps the answer, so repeats are free.
+// The page uses its pre-drawn library first and only calls this for names the library doesn't have.
 
 // {thing} is the object's name; {place} is the child's world, so "buttons" in a space station
 // become launch buttons, not sewing buttons.
@@ -10,7 +11,7 @@ const STYLE =
   "One clickable object for a children's escape-room game{place}. The object is: {thing}.{role} " +
   "Draw it the way it would look in that place. If the name is a place or an idea, draw one small object that shows it, " +
   "like a round window or a sign. {look}Soft clay toy style, chunky simple shapes, gentle light. " +
-  "Whole object visible and centred, three-quarter view. Family friendly. " +
+  "Seen straight from the front, facing the viewer, whole object visible and centred. Family friendly. " +
   "No words, letters or numbers, no background, no floor.";
 
 // The link is public, so only known words are drawn: every word in the name must be on this list.
@@ -56,10 +57,29 @@ const WORDS = new Set((
 // "planets" and "boxes" count as "planet" and "box".
 const known = w => WORDS.has(w) || WORDS.has(w.replace(/es$/, "")) || WORDS.has(w.replace(/s$/, ""));
 
+// Names outside the list are allowed only when they are short, plain words, not on this list,
+// and pass OpenAI's moderation check. The image model's own content filter applies too.
+const BLOCKED = new Set(("gun guns pistol rifle shotgun knife knives blood bloody gore kill killer killing dead corpse " +
+  "naked nude sex sexy drug drugs weed cigarette cigarettes vape beer wine vodka alcohol drunk poop bum nazi").split(" "));
+async function safeName(thing) {
+  const words = thing.split(/[ -]+/);
+  if (words.every(known)) return true;
+  if (words.length > 3 || thing.length > 30 || !words.every(w => /^[a-z][a-z']*$/.test(w)) || words.some(w => BLOCKED.has(w))) return false;
+  const m = await fetch("https://api.openai.com/v1/moderations", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + process.env.OPENAI_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "omni-moderation-latest", input: "A picture of " + thing + " for a children's game" })
+  });
+  if (!m.ok) return false;
+  return !(await m.json()).results?.[0]?.flagged;
+}
+
 export async function GET(request) {
   const params = new URL(request.url).searchParams;
-  const thing = (params.get("thing") || "").trim().toLowerCase();
-  if (thing.length > 39 || !thing.split(/[ -]+/).every(known)) return new Response("Can't draw that", { status: 400 });
+  const thing = (params.get("thing") || "").trim().toLowerCase().replace(/\s+/g, " ");
+  if (!thing || thing.length > 39) return new Response("Can't draw that", { status: 400 });
+  if (!process.env.OPENAI_API_KEY) return new Response("Drawing is not set up", { status: 503 });
+  if (!(await safeName(thing))) return new Response("Can't draw that", { status: 400 });
   // The place is the longest run of known words in the child's world, at most 8:
   // "inside a space station where the robots dance" -> "inside a space station".
   let run = [], best = [];
@@ -71,7 +91,6 @@ export async function GET(request) {
   const look = (params.get("look") || "").toLowerCase().replace(/[^a-z '-]/g, " ").split(/\s+/).filter(w => w && known(w)).slice(0, 8).join(" ");
   const role = { exit: " It is the locked way out: show a big lock or keypad on it.",
                  clue: " It hides the clue: give it one small, curious detail that invites a closer look." }[params.get("role")] || "";
-  if (!process.env.OPENAI_API_KEY) return new Response("Drawing is not set up", { status: 503 });
 
   const r = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -80,7 +99,7 @@ export async function GET(request) {
       model: process.env.IMAGE_MODEL || "gpt-image-1-mini",
       prompt: STYLE.replace("{thing}", thing).replace("{role}", role)
         .replace("{place}", place ? ", set " + (/^(in|inside|on|under|at)\b/.test(place) ? "" : "in ") + place : "")
-        .replace("{look}", look ? "Colours and mood: " + look + ". " : "Warm friendly colours. "),
+        .replace("{look}", look ? "Colours and mood: " + look + ". " : "Its natural, real-life colours, bright and clear. "),
       size: "1024x1024",
       quality: "low",
       background: "transparent",
