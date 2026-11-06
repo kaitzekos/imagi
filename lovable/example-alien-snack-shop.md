@@ -6,17 +6,17 @@ Kai's checkpoint build. Uses the teaching example from the guide. Record every p
 
 Status: not sent yet.
 
-The starting prompt from [starting-prompt.md](starting-prompt.md) with these blanks:
+The starting prompt from [starting-prompt.md](starting-prompt.md), with these five lines under "Our game":
 
 ```text
-MY WORLD: A tiny snack shop on a spaceship, run by three silly aliens. The snack fridge is locked.
-MY CLUE: A receipt on the counter lists snacks with numbers: Star = 4, Moon = 2, Rocket = 7. The fridge lock shows three pictures in a row: Rocket, Star, Moon.
-MY CODE: 742
-MY ENDING: The fridge pops open, snacks float out and the aliens throw a snack party.
-MY COLOURS AND MOOD: Warm lilac and lime green. Cosy and silly.
+- Our world: A tiny snack shop on a spaceship, run by three silly aliens. The snack fridge is locked.
+- The clue (where the code is hidden, and what the player reads there): A receipt on the counter lists snacks with numbers: Star = 4, Moon = 2, Rocket = 7. The fridge lock shows three pictures in a row: Rocket, Star, Moon.
+- The secret code: 742
+- Ending (what happens when someone escapes): The fridge pops open, snacks float out and the aliens throw a snack party.
+- Colours and mood: Warm lilac and lime green. Cosy and silly.
 ```
 
-MY COLOURS AND MOOD is a suggestion taken from the vision-deck picture (Imaginable_Brand_and_Source_Pack/assets/escape.png). Kai to confirm before sending.
+"Colours and mood" is a suggestion taken from the vision-deck picture (Imaginable_Brand_and_Source_Pack/assets/escape.png). Kai to confirm before sending.
 
 Sent on: ______ Build time: ______ Credits used: ______
 

@@ -2058,7 +2058,9 @@
     A.push("- Use the project's existing setup. One page, one route.");
     A.push("- No network requests, no external images, no image files.");
     A.push("- The room's background is the exact SVG code in LAYOUT.md. Paste it as it is; don't redraw or simplify it.");
-    A.push("- Draw every thing in the room as its own inline SVG illustration (a component per thing), following its description in LAYOUT.md. Use an emoji only if a thing really can't be drawn.");
+    A.push("- Draw every thing in the room as its own inline SVG illustration (a component per thing), following its description in LAYOUT.md. If a thing is hard to draw, draw a simpler version with the same shapes and colours.");
+    A.push("- No emoji anywhere in the game: not for things, buttons, messages or the ending. The only exception is an emoji the makers typed in their own words in CONTENT.md.");
+    A.push("- Don't use the UI kit's Card, Badge or Button components for things in the room. Things are drawings, not UI.");
     A.push("- Never put a thing inside a card, tile, box, bubble, button-shaped frame, border or frosted-glass panel. Each thing stands directly in the room with only its own shadow, like an object in a real room.");
     A.push("- One playful, rounded heading font is fine; body text uses a clear sans-serif.");
     A.push("- No cookies, accounts, analytics or data collection.");
@@ -2098,7 +2100,7 @@
     P.push("# PLAN.md: " + (title || "our escape room"));
     P.push("");
     P.push("## Pitch");
-    P.push(stop(world) + " The player has to find the clue, work out the secret code and open the " + exitName + " to escape. 60 to 90 seconds of play for " + player + ".");
+    P.push(stop(world) + " The player has to find the clue, work out the secret code and open the " + exitName + " to escape. 60 to 90 seconds of play for " + player.replace(/^(My|Our|The) /, function (m) { return m.toLowerCase(); }) + ".");
     P.push("");
     P.push("## Puzzle flow");
     P.push("1. Look around. The player clicks things in the room; each one answers in the message bar.");
@@ -2115,7 +2117,7 @@
     P.push("2. The room, filling most of the screen, laid out exactly as in LAYOUT.md. The code box and an Open button sit on or right next to the " + exitName + ".");
     P.push("3. One message bar under the room, big text, rounded. Every click, wrong guess and hint shows here.");
     P.push("4. Bottom bar: big Hint (left) and Restart (right) buttons, always visible, with the message bar between them.");
-    P.push("When the player escapes, an ending screen covers the room: the ending text, big and joyful, a burst of the room's emoji, and a Play again button that works exactly like Restart.");
+    P.push("When the player escapes, an ending screen covers the room: the ending text, big and joyful, a burst of small drawn confetti shapes in the room's colours, and a Play again button that works exactly like Restart.");
     P.push("");
     P.push("## Build milestones");
     P.push("1. The room: back wall, side walls, floor, lamp and rug as in LAYOUT.md. Checkpoint: it matches the room description.");
@@ -2151,7 +2153,7 @@
     C.push("");
     C.push("## Things and what they say when clicked");
     g.things.forEach(function (t) {
-      C.push("- " + letter[t.id] + ". " + t.name.trim() + (t.emoji ? " " + t.emoji : "") + ": " +
+      C.push("- " + letter[t.id] + ". " + t.name.trim() + ": " +
         (filled(t.say) ? "\"" + tidy(t.say) + "\"" : "write one or two playful sentences that fit our world") +
         (t.clue ? " (holds the clue)" : "") + (t.exit ? " (the locked exit)" : "") +
         (t.inside && thingById(t.inside) ? " (hidden inside the " + lower(thingById(t.inside).name) + " until it is clicked)" : ""));
@@ -2206,7 +2208,7 @@
     Lt.push("| Map | Thing | Centre x | Centre y | Width | Where | How it looks |");
     Lt.push("|---|---|---|---|---|---|---|");
     things.forEach(function (t) {
-      Lt.push("| " + letter[t.id] + " | " + t.name.trim() + (t.emoji ? " " + t.emoji : "") + (t.exit ? " (locked exit, with a padlock badge and the code box beside it)" : "") + (t.clue ? " (holds the clue)" : "") +
+      Lt.push("| " + letter[t.id] + " | " + t.name.trim() + (t.exit ? " (locked exit, with a padlock badge and the code box beside it)" : "") + (t.clue ? " (holds the clue)" : "") +
         " | " + Math.round(t.x) + "% | " + Math.round(t.y) + "% | " + widthPct(t) + "% (about " + Math.round(widthPct(t) * 12.8) + " px) | " + mount(t) + " | " + looks(t) + " |");
     });
     if (!things.length) Lt.push("| | 4 to 6 things from our world, spread over the wall and floor | | | | | |");
@@ -2230,7 +2232,7 @@
     Lt.push("```");
 
     var head = "# Build pack: " + (title || "our escape room") + "\n\n" +
-      "This one message holds the four files for one game: AGENTS.md (how to build it), PLAN.md (the game, its screens, milestones and checklist), CONTENT.md (every word) and LAYOUT.md (a written screenshot of the room). Read all four before you write any code, then build it exactly. When you finish, run the playtest checklist, fix anything that fails, and tell me in plain words what to click to test it.";
+      "This one message holds the four files for one game: AGENTS.md (how to build it), PLAN.md (the game, its screens, milestones and checklist), CONTENT.md (every word) and LAYOUT.md (a written screenshot of the room). Read all four before you write any code, then build it exactly. The most important look rule: every thing in the room is drawn as its own SVG picture standing in the room, never an emoji and never inside a tile, card or glass panel. When you finish, run the playtest checklist, fix anything that fails, and tell me in plain words what to click to test it.";
     return [head, A.join("\n"), P.join("\n"), C.join("\n"), Lt.join("\n")].join("\n\n---\n\n");
   }
 
@@ -2262,7 +2264,7 @@
     var byId = {}; a.things.forEach(function (t) { byId[t.id] = t; });
     b.things.forEach(function (t) {
       var o = byId[t.id], n = "the " + lower(t.name);
-      if (!o) { out.push("Add " + n + (t.emoji ? " " + t.emoji : "") + ": " + placeWords(t) + ", " + lookWords(t) + (filled(t.say) ? ". When clicked it says " + q(t.say) : "") + "."); return; }
+      if (!o) { out.push("Add " + n + ": " + placeWords(t) + ", " + lookWords(t) + (filled(t.say) ? ". When clicked it says " + q(t.say) : "") + "."); return; }
       delete byId[t.id];
       if (o.name !== t.name) out.push("Rename the " + lower(o.name) + " to " + lower(t.name) + ".");
       if (placeWords(o) !== placeWords(t)) out.push("Move " + n + " " + placeWords(t) + ".");

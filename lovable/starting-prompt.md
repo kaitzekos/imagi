@@ -44,9 +44,13 @@ Build a one-screen escape room game for 12-year-olds, played on a school laptop.
 ## Look and feel
 Direction: the room is a real place in our world, in our colours and mood. It should look like a scene from a game, not a web page or a form.
 - Draw a back wall and a floor in our colours, with depth: light coming from one side, a soft shadow under each thing, a darker edge where wall meets floor.
-- Draw every thing with CSS shapes and big emoji (at least 64px). Place them around the room where they would really be: on the floor, on a shelf, on the wall. Never in a grid or a list.
-- Every thing reacts when the mouse is over it (a small lift or glow) and when clicked (a short wiggle), so players can tell it is clickable.
-- The locked exit is the biggest thing in the room. It looks locked (a padlock on it) and opens with a short, happy animation when the code is right.
+- Draw every thing as its own inline SVG illustration in a chunky clay-toy style: rounded shapes, flat colours, one lighter highlight at the top-left, one darker shade at the bottom-right, a 2 to 3 px outline in a darker shade. If a thing is hard to draw, draw a simpler version with the same shapes and colours. Make things big: 100 to 180 px wide.
+- No emoji anywhere in the game: not for things, buttons, messages or the ending, unless we typed one in our own words above. Don't use the UI kit's Card, Badge or Button components for things in the room; things are drawings, not UI.
+- Never put a thing inside a card, tile, box, bubble, border or frosted-glass panel. Each thing stands directly in the room, like an object in a real room: floor things on a soft oval shadow, wall things with a small shadow on the wall, pictures and posters hanging from a nail on a string.
+- Place them around the room where they would really be: on the floor, on a shelf, on the wall. Never in a grid or a list.
+- Every thing reacts when the mouse is over it (it lifts 4px with a stronger shadow) and when clicked (a short wiggle), so players can tell it is clickable. No hover background.
+- The locked exit is the biggest thing in the room and looks like the real thing (a door has a frame, panels and a handle) with a padlock on it. Its code box and Open button sit in a small panel just under it. It opens with a short, happy animation when the code is right.
+- The page around the room is light and calm (white or a very pale tint of the wall colour).
 - One bold, playful heading font that fits the mood, and easy-to-read body text of at least 18px. Strong contrast everywhere.
 - Buttons are big (at least 44px tall) with clear words. Never use colour as the only signal.
 - The whole game fits a 1366 x 768 laptop screen with no scrolling, and still works on a tablet.
@@ -105,7 +109,7 @@ Use only if copying from a shared document doesn't work on the student route. Ex
 
 ```text
 Escape room game on one screen. World: ______. Clue: ______. Code: ______. Ending: ______. Colours and mood: ______.
-Name and goal at the top. Room fills the screen, with things to click. Locked exit from my world, with a code box. One message bar. Wrong or empty code stays shut, never shows the code. Code check ignores capitals and spaces. Hint points to the clue. Big Hint and Restart buttons along the bottom. Shapes and emoji art. No sign-in, saving or internet pictures.
+Name and goal at the top. Room fills the screen, with things to click. Locked exit from my world, with a code box. One message bar. Wrong or empty code stays shut, never shows the code. Code check ignores capitals and spaces. Hint points to the clue. Big Hint and Restart buttons along the bottom. Draw every thing as an SVG picture standing in the room, no emoji, no tiles or cards. No sign-in, saving or internet pictures.
 ```
 
 ## Why each part is there
@@ -119,7 +123,7 @@ Name and goal at the top. Room fills the screen, with things to click. Locked ex
 | "for 12-year-olds" | Keeps content and reading level suitable |
 | Name and goal line at the top | The player knows what game this is and what to do in the first seconds |
 | Room drawn with depth, things placed where they'd really be | A place to explore, not a form with one button; still finishable in a minute |
-| Shapes and emoji, no image files | "Simple built-in art" (reference/assignment.md line 12); no internet or generated images |
+| SVG things drawn in code, no emoji, no tiles, no image files | "Simple built-in art" (reference/assignment.md line 12). Emoji in tiles looked cheap in imagi (Kai, 5 Nov); things drawn in code, standing in the room, look like a game. The brief names things in words only, because emoji next to a name probably invite the builder to draw emoji (not yet tested) |
 | Exit is a locked thing from the world, code box on or next to it | The lock is part of the story, so solving it feels like escaping, not filling in a box |
 | Code check ignores capitals, spaces and punctuation | Candy Factory rejected "teamwork" when the code was "TEAM WORK" (found by Tomer) |
 | Wrong or empty code, never show the code | The fairness rule children test later (right, wrong, empty) |

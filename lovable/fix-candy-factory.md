@@ -27,11 +27,11 @@ Send only after prompt 1 passes. In imagi, the short prompt built a plain Candy 
 ```text
 Change: restyle the lobby and both player pages so they look like a scene from a candy factory game, not a web page.
 
-Direction: a candy factory at dusk. Warm pink and mint, with chocolate brown for text and outlines. Candy-stripe pillars, round lollipop shapes, gumdrops and a glowing factory window, all drawn with CSS shapes, gradients and big emoji. No image files and no internet pictures.
-- Lobby: the game name huge in a bold, rounded, playful font with a chocolate outline, over the drawn factory. One line saying "Two players. Two screens. One sweet escape." Two big buttons: Player A: The Detective (pink) and Player B: The Wizard (mint), each with its emoji and one line saying what that player does.
+Direction: a candy factory at dusk. Warm pink and mint, with chocolate brown for text and outlines. Candy-stripe pillars, round lollipop shapes, gumdrops and a glowing factory window, each drawn as its own inline SVG picture in a chunky clay-toy style: rounded shapes, flat colours, a lighter highlight top-left, a darker shade bottom-right, a 2 to 3 px darker outline, a soft shadow under it. No emoji, no image files, no internet pictures. Never put a drawing inside a card, tile or frosted-glass panel, and don't use the UI kit's Card component for the scenery.
+- Lobby: the game name huge in a bold, rounded, playful font with a chocolate outline, over the drawn factory. One line saying "Two players. Two screens. One sweet escape." Two big buttons: Player A: The Detective (pink, with a drawn magnifying glass) and Player B: The Wizard (mint, with a drawn wand), each with one line saying what that player does.
 - Each player page: "Player A" or "Player B" big at the top in its own colour, so nobody mixes them up. The puzzle area looks like part of the factory (a dark storeroom lit by a torch for the Detective, an old map on parchment for the Wizard).
-- Buttons at least 44px tall, body text at least 18px, strong contrast. Never colour alone: every coloured thing also has its name or an emoji.
-- Small, happy movement: buttons lift on hover, wrong answers wiggle, the escape ending bursts with candy emoji. Respect prefers-reduced-motion.
+- Buttons at least 44px tall, body text at least 18px, strong contrast. Never colour alone: every coloured thing also has its name written on or under it.
+- Small, happy movement: buttons lift on hover, wrong answers wiggle, the escape ending bursts with drawn sweets and confetti. Respect prefers-reduced-motion.
 - Fits a 1366 x 768 laptop screen and a tablet with no sideways scrolling.
 
 Because: the game should feel like a candy factory the moment it opens. Right now it looks like a plain web page.
@@ -41,4 +41,4 @@ Keep: every clue, answer, message, the timer, the final team word, the answer ch
 Check: open the lobby and both player pages on a laptop. Play the whole game through to the escape ending with the right answers, then try one wrong answer and one empty answer on each page. Tell me what you changed and which checks passed.
 ```
 
-Expected: the lobby and both pages show the factory look; the whole game still plays through to the ending; wrong and empty answers still stay shut; TEAMWORK still opens the doors.
+Expected: the lobby and both pages show the factory look, with drawn SVG scenery and no emoji or tiles; the whole game still plays through to the ending; wrong and empty answers still stay shut; TEAMWORK still opens the doors.
