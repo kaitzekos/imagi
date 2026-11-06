@@ -1,6 +1,6 @@
 # Fix prompts: Candy Factory Escape
 
-Status: written 2026-11-05, not yet sent. Send them in imagi to the Candy Factory project, one at a time, in this order. Send prompt 1 to the lovable.app copy too. Write the expected result in checkpoint/test-log.md before each test, and record only what you see.
+Status: written 2026-11-05. Sent on lovable.app 6 Nov: Kai, "perfect" (which codes were typed was not recorded). In imagi the same fix built a much plainer game (checkpoint/test-log.md section 3). Send them in imagi to the Candy Factory project, one at a time, in this order. Send prompt 1 to the lovable.app copy too. Write the expected result in checkpoint/test-log.md before each test, and record only what you see.
 
 ## Why
 

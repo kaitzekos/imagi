@@ -1,10 +1,10 @@
 # Working example: Alien Snack Shop
 
-Kai's checkpoint build. Uses the teaching example from the guide. Record every prompt exactly as sent.
+A hand-built example of what the starting prompt asks Lovable to make, not a Lovable build: Kai wrote it by hand ([mockup/alien-snack-shop-v1.html](../mockup/alien-snack-shop-v1.html), live at <https://imagi-mockup.vercel.app/alien-snack-shop-v1.html>). Uses the teaching example from the guide. It was made before the no-emoji rule, so it uses emoji; the current brief asks Lovable for drawings. If the prompts below are sent to Lovable, record every prompt exactly as sent.
 
 ## Version 1 prompt
 
-Status: not sent yet.
+Status: not sent to Lovable. The hand-built example was written by hand, not built from this prompt.
 
 The starting prompt from [starting-prompt.md](starting-prompt.md), with these five lines under "Our game":
 
@@ -16,7 +16,7 @@ The starting prompt from [starting-prompt.md](starting-prompt.md), with these fi
 - Colours and mood: Warm lilac and lime green. Cosy and silly.
 ```
 
-"Colours and mood" is a suggestion taken from the vision-deck picture (Imaginable_Brand_and_Source_Pack/assets/escape.png). Kai to confirm before sending.
+"Colours and mood" is a suggestion taken from the vision-deck picture (Imaginable_Brand_and_Source_Pack/assets/escape.png).
 
 Sent on: ______ Build time: ______ Credits used: ______
 
@@ -44,6 +44,7 @@ Prompt for that case. Status: not sent yet. Replace it if the observation was di
 
 ```text
 Change: after a wrong or empty code, make the receipt on the counter glow so the player notices it.
+Because: our player never opened the receipt.
 Keep: the code 742, the funny wrong-code message, the ending and Restart.
 Check: we will type 111 and expect the receipt to glow with no numbers shown on the lock; then 742 opens the fridge; then Restart and the glow is gone.
 ```

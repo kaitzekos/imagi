@@ -10,7 +10,7 @@ Draft v0. Timings are targets until a rehearsal is timed.
 | 3 | Check the credits for each pair. [Where to look: added after testing] |
 | 3 | Open the starting-prompt document and check that children can open it. [link from Liba] |
 | 2 | Open the example game on the projector laptop |
-| 4 | Print: help cards (8), checks A and B (16 each), maker notes (16), take-home cards (16), paper backup (2 sets) |
+| 4 | Print: idea cards (8, [../student/pdf/idea-card.pdf](../student/pdf/idea-card.pdf)), playtest cards (8, [../student/pdf/playtest-card.pdf](../student/pdf/playtest-card.pdf)), help cards (8), checks A and B (16 each), maker notes (16), take-home cards (16), paper backup (2 sets) |
 | 3 | Write learner numbers 1-16 on the checks; pair 1 = learners 1 and 2, and so on |
 
 Never write passwords on the board or in the documents.
@@ -21,7 +21,8 @@ Never write passwords on the board or in the documents.
 |---|---|---|---|
 | 0-2 | Play the example game on the projector | Facilitator | "Can your classmates escape a world you invented? Today you'll build one." |
 | 2-5 | Starting check, on paper, alone (odd numbers A, even numbers B) | Nobody | "On your own. Write what you think. There's no trick." |
-| 5-10 | Idea card, then send the starting prompt. While it builds, write a prediction | Partner A | "Each of you adds at least one line. Your idea first, before the AI." |
+| 5-8 | Idea card, on paper only. No laptop | Nobody | "Each of you adds at least one line. Your idea first, before the AI." |
+| 8-10 | Send the starting prompt. While it builds, write a prediction | Partner A | "Copy the prompt, fill the five blanks from your card, and send it." |
 | 10-17 | Play Version 1, then one change in their own words | Partner A | "Was your prediction right? What would make it feel like your world?" |
 | 17-23 | Neighbouring pairs swap and play on the creator's laptop. Creators watch and write one thing the player did | Player | "Creators: no helping, no pointing. Watch where they get stuck." |
 | 23-31 | Each child suggests a change; the pair picks one and says why; send it | Partner B | "What did your player do? Which change helps them? Why that one?" |
@@ -45,6 +46,6 @@ Extension (15 min, optional): another upgrade, or a second player test with some
 | Can't log in | [Steps from Liba]. Over 3 minutes: paper backup |
 | Build takes over 3 minutes | Refresh once. Then paper backup |
 | Lovable added sign-in, a database or images | Send: "Remove the ______. Keep the room, clue, lock, hint, ending and Restart." |
-| A change broke the game | [Restore steps, added after testing] |
+| A change broke the game | Restore is not tested yet. Send: "Undo the last change only. The game should work like before: ______. Keep everything else." If that fails, paper backup |
 | Pair argues about the change | "What does each of you want the player to feel? Which change tests that?" |
 | Unsuitable idea | "Would a 12-year-old in another class enjoy this? What could you change so they would?" |

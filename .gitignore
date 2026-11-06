@@ -1,6 +1,7 @@
 ﻿.DS_Store
 .env
-evidence/raw/
+/evidence/
+checkpoint/
 
 # Imaginable's own source files: confidential, never pushed
 Imaginable_Brand_and_Source_Pack/
@@ -15,6 +16,7 @@ Imaginable_*.pdf
 # Local agent setup and planning: not published
 .claude/
 .github/
+.impeccable/
 /AGENTS.md
 /CLAUDE.md
 /PLAN.md

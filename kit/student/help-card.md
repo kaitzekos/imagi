@@ -29,5 +29,6 @@ Go back to your last working version. [Steps added after testing.] Or put your h
 ## Asking for a change
 
 Change: ______ (what should be different)
+Because: ______ (what your player did)
 Keep: ______ (what must still work)
 Check: we will try ______ and expect ______.

@@ -1,4 +1,4 @@
-# Change / Keep / Check
+# Change / Because / Keep / Check
 
 The frame for Version 2 and every later change. Use it when a pair's request is vague. Once a child can say it without the frame, stop showing it.
 
@@ -6,6 +6,7 @@ The frame for Version 2 and every later change. Use it when a pair's request is 
 
 ```text
 Change: ______ (what should be different, and for whom)
+Because: ______ (what the player did that shows we need it)
 Keep: ______ (what must still work)
 Check: after this, we will try ______ and expect ______.
 ```
@@ -18,16 +19,16 @@ Partner B types it. Send one change at a time.
 2. Each partner proposes one change.
 3. Pick one. Say why: "Because ______."
 4. Predict: "After the change, the next player will ______."
-5. Send the Change / Keep / Check prompt.
+5. Send the Change / Because / Keep / Check prompt.
 6. Test the change. Then test the Keep line.
 
 ## Vague and clear
 
 | Vague | Clear |
 |---|---|
-| Make it easier. | Change: after a wrong guess, make the receipt glow. Keep: the code, the ending and Restart. Check: type 111 and the receipt glows; Restart and it stops glowing. |
-| Make the ending better. | Change: when the fridge opens, the aliens dance and a sign says "Snack party!". Keep: the wrong-code message. Check: type the right code and see the dance; type a wrong code and the fridge stays shut. |
-| Fix the hint. | Change: the hint says "Look at what the aliens bought" instead of giving the number. Keep: everything else. Check: press Hint and no numbers appear. |
+| Make it easier. | Change: after a wrong guess, make the receipt glow. Because: our player clicked the fridge three times and never opened the receipt. Keep: the code, the ending and Restart. Check: type 111 and the receipt glows; Restart and it stops glowing. |
+| Make the ending better. | Change: when the fridge opens, the aliens dance and a sign says "Snack party!". Because: when the fridge opened, our player said "Is that it?" Keep: the wrong-code message. Check: type the right code and see the dance; type a wrong code and the fridge stays shut. |
+| Fix the hint. | Change: the hint says "Look at what the aliens bought" instead of giving the number. Because: our player pressed Hint, read 742 and typed it without looking at the receipt. Keep: everything else. Check: press Hint and no numbers appear. |
 
 ## When Lovable says "Done"
 

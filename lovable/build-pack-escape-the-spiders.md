@@ -1,6 +1,6 @@
 # Build pack: Escape the spiders (ready to paste)
 
-Status: generated 2026-11-06 by the builder (mockup/escape-builder.html) from the spider room Kai built. Not yet sent. Paste everything inside the box into a new Lovable project in imagi as one message. Before you test, write the expected result in checkpoint/test-log.md: every thing drawn as a picture standing in the room, no emoji, no tiles or cards, the room laid out as in the map.
+Status: generated 2026-11-06 by the builder (mockup/escape-builder.html) from the spider room Kai built. Sent and built in imagi 6 Nov; result in checkpoint/test-log.md section 2 (places right, look flat; gameplay not played through yet). Paste everything inside the box into a new Lovable project in imagi as one message. Before you test, write the expected result in checkpoint/test-log.md: every thing drawn as a picture standing in the room, no emoji, no tiles or cards, the room laid out as in the map.
 
 What changed since the 5 Nov build (emoji in frosted tiles): every thing is now drawn as an SVG with no tiles; the room background is the exact SVG; things are named in words only, with no emoji; Lovable is told not to use its Card, Badge or Button components for things.
 

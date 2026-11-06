@@ -14,6 +14,7 @@ Fill in the idea card with your partner.
 - Your clue: where the secret code hides.
 - Your code: 3 numbers or one word.
 - Your ending: what happens when someone escapes.
+- Your colours and mood: two or three colours, and how it should feel.
 
 Each of you adds at least one line.
 
@@ -22,7 +23,7 @@ Each of you adds at least one line.
 Partner A is at the keyboard.
 
 1. Copy the starting prompt.
-2. Fill the four blanks with your idea, in your words.
+2. Fill the five blanks with your idea, in your words.
 3. Send it.
 
 While it builds, each of you writes: "When I type the wrong code, I think the game will ______."
@@ -47,7 +48,7 @@ Partner B is at the keyboard now.
 
 Each of you suggests one change. Pick one. Say why.
 
-Stuck? Use the help card: Change ______. Keep ______. Check ______.
+Stuck? Use the help card: Change ______. Because ______. Keep ______. Check ______.
 
 ## 7. Check it
 

@@ -22,7 +22,7 @@ Screenshot each step without account details.
 
 ## If restore doesn't work for students
 
-Use a Change / Keep / Check prompt that names the last working state:
+Use a Change / Because / Keep / Check prompt that names the last working state:
 
 ```text
 Undo the last change only. The game should work like before: ______. Keep everything else.
